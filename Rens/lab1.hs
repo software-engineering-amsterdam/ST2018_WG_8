@@ -19,9 +19,7 @@ forall = flip all
 reversal :: Integer -> Integer
 reversal = read . reverse . show
 
-data Boy = Matthew | Peter | Jack | Arnold | Carl
-    deriving (Eq,Show)
-boys = [Matthew, Peter, Jack, Arnold, Carl]
+
 
 
 -- Exercise 1
@@ -125,7 +123,7 @@ conjenctures n = take n (filter (not . prime) (primeMults [1..]))
 doubleEveryOther :: [Int] -> [Int]
 doubleEveryOther [] = []
 doubleEveryOther (x:[]) = [x]
-doubleEveryOther (x:y:ys) = x : (y * 2) : doubleEveryOther ys
+doubleEveryOther (x:y:z) = x : (y * 2) : doubleEveryOther z
 
 -- Now subtract 9 from each number greater than 9 as a result of the operation.
 reduceLargeNum :: Int -> Int
@@ -137,19 +135,39 @@ sumLargeNums :: [Int] -> [Int]
 sumLargeNums [] = []
 sumLargeNums (x:xs) = reduceLargeNum x : sumLargeNums xs
 
-luhn :: [Int] -> Bool
+luhn :: Integer -> Bool
 luhn x = (sum(convertedNum) `mod` 10) == 0
     where
-        convertedNum = sumLargeNums (doubleEveryOther x)
+        convertedNum = sumLargeNums (doubleEveryOther (reverse (digits x)))
 
+digits :: Integer -> [Int]
+digits n = map (\x -> read [x] :: Int) (show n)
+
+-- AmEx is 15 digits long and starts with 34 or 37
 isAmericanExpress, isMaster, isVisa :: Integer -> Bool
-isAmericanExpress x = 1 > 1
-isMaster x =1 > 1
-isVisa x = (div x (findDividerVisa x)) == 4
+isAmericanExpress x = (firstTwo == [3,4] || firstTwo == [3,7]) && length (digits x) == 15 && luhn x
+    where firstTwo = take 2 (digits x)
 
-findDividerVisa :: Integer -> Integer
-findDividerVisa x
-    | x >= 1000000000000000000  = 1000000000000000000
-    | x >= 1000000000000000     = 1000000000000000
-    | x >= 1000000000000        = 1000000000000
-    | otherwise                 = 124
+-- MasterCard is 16 digits long and starts with 5 followed by 1-5
+isMaster x = firstDigitCorrect && secondDigitCorrect && length (digits x) == 16 && luhn x
+    where
+        firstDigitCorrect = head (digits x) == 5
+        secondDigitCorrect = (digits x) !! 2 < 6 && (digits x) !! 2 > 0
+
+-- Visa is 16 digits long and starts with 4
+isVisa x = head (digits x) == 4 && length (digits x) == 16 && luhn x
+
+-- Exercise 8
+data Boy = Matthew | Peter | Jack | Arnold | Carl
+    deriving (Eq,Show)
+boys = [Matthew, Peter, Jack, Arnold, Carl]
+
+accuses :: Boy -> Boy -> Bool
+accuses boy boy =
+
+accusers :: Boy -> [Boy]
+matthew = \ x -> not (x==Matthew) && not (x==Carl)
+peter   = \ x -> x==Matthew || x==Jack
+jack    = \ x -> not (matthew x) && not (peter x)
+arnold  = \ x -> matthew x /= peter x
+carl    = \ x -> not (arnold x)
