@@ -162,12 +162,58 @@ data Boy = Matthew | Peter | Jack | Arnold | Carl
     deriving (Eq,Show)
 boys = [Matthew, Peter, Jack, Arnold, Carl]
 
+-- The accusation function result is derived by processing the boys' statements
 accuses :: Boy -> Boy -> Bool
-accuses boy boy =
+accuses x y = (getBoy x) y
 
+-- Change a boys name into the appropriate function application
+getBoy :: Boy -> (Boy -> Bool)
+getBoy y
+    | y == Matthew = matthew
+    | y == Peter = peter
+    | y == Jack = jack
+    | y == Arnold = arnold
+    | y == Carl = carl
+
+-- Find the accusers/accused boys/boy by boys/boy by application of the accuses function.
+-- This function logically derives a True or False from processing the statements.
 accusers :: Boy -> [Boy]
-matthew = \ x -> not (x==Matthew) && not (x==Carl)
-peter   = \ x -> x==Matthew || x==Jack
-jack    = \ x -> not (matthew x) && not (peter x)
-arnold  = \ x -> matthew x /= peter x
-carl    = \ x -> not (arnold x)
+accusers boy = [p | p <- boys, accuses p boy]
+
+accused :: Boy -> [Boy]
+accused boy = [p | p <- boys, accuses boy p]
+
+-- Define the logic of the statements of each boys, use Boy's for direct accusations
+-- use the functions for statements about the other statements.
+matthew = \x -> not (x == Matthew) && not (x == Carl)
+peter   = \x -> x == Matthew || x == Jack
+jack    = \x -> not (matthew x) && not (peter x)
+arnold  = \x -> matthew x /= peter x
+carl    = \x -> not (arnold x)
+
+-- All subsequences of 3 boys, the max amount of boys that can speak the truth.
+possibleTruthers :: [[Boy]]
+possibleTruthers = [p | p <- combinations, (length p) == 3]
+    where combinations = subsequences boys
+
+-- Check whether all boys in a group of three point to the same culprit.
+-- If so, these boys must be speaking the truth as only one culprit can exist
+-- within the boundaries of this logic.
+findSingleCulprit :: [Boy] -> [Boy]
+findSingleCulprit (x:y:z:zs) = (intersect (intersect (accused x) (accused y)) (accused z))
+
+-- Find the culprit by looking for a set of 3 boys, assuming they are speaking
+-- the truth, that all accuse the same boy.
+findCulprit :: [[Boy]] -> [Boy]
+findCulprit [] = []
+findCulprit (x:xs)
+    | (findSingleCulprit x) /= [] = (findSingleCulprit x)
+    | otherwise = (findCulprit xs)
+
+-- Generate the guilty boy by finding the culprit amongst all possible truthers,
+-- find the honest ones by rerunning the function to find who are accusing the
+-- guilty party and find the liars as a difference between the honest boys and all boys.
+guilty, honest, liars :: [Boy]
+guilty = (findCulprit possibleTruthers)
+honest = accusers (head guilty)
+liars = boys \\ honest
