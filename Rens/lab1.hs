@@ -1,6 +1,7 @@
 module Lab1 where
 import Data.List
 import Test.QuickCheck
+import Testdata
 
 prime :: Integer -> Bool
 prime n = n > 1 && all (\ x -> rem n x /= 0) xs
@@ -18,9 +19,6 @@ forall = flip all
 
 reversal :: Integer -> Integer
 reversal = read . reverse . show
-
-
-
 
 -- Exercise 1
 
@@ -143,19 +141,33 @@ luhn x = (sum(convertedNum) `mod` 10) == 0
 digits :: Integer -> [Int]
 digits n = map (\x -> read [x] :: Int) (show n)
 
--- AmEx is 15 digits long and starts with 34 or 37
+-- AmEx is 15 digits long and starts with 34 or 37 (should be greater than 36 due to necessicty for 2 digits)
 isAmericanExpress, isMaster, isVisa :: Integer -> Bool
-isAmericanExpress x = (firstTwo == [3,4] || firstTwo == [3,7]) && length (digits x) == 15 && luhn x
+isAmericanExpress x = (x > 37) && ((firstTwo == [3,4] || firstTwo == [3,7]) && length (digits x) == 15 && luhn x)
     where firstTwo = take 2 (digits x)
 
 -- MasterCard is 16 digits long and starts with 5 followed by 1-5
-isMaster x = firstDigitCorrect && secondDigitCorrect && length (digits x) == 16 && luhn x
+isMaster x = (x > 50) && (firstDigitCorrect && secondDigitCorrect && (length (digits x) == 16) && luhn x)
     where
         firstDigitCorrect = head (digits x) == 5
-        secondDigitCorrect = (digits x) !! 2 < 6 && (digits x) !! 2 > 0
+        secondDigitCorrect = (digits x) !! 1 < 6 && (digits x) !! 1 > 0
 
 -- Visa is 16 digits long and starts with 4
 isVisa x = head (digits x) == 4 && length (digits x) == 16 && luhn x
+
+-- Now create a couple of test cases for each bank, knowing they are right:
+-- The problem is that you don't have another formula to check against.
+-- We will have to do with a lot of numbers that are sure to be right (online source).
+-- Moreover we can test if cc numbers only belong to one bank max (which should hold).
+
+-- This function takes one of the isMaster/isVisa/isAmericanExpress funcs and a list of cc nums.
+testCards :: (Integer -> Bool) -> [Integer] -> Bool
+testCards func [] = True
+testCards func (x:xs) = (func x) && testCards func xs
+
+-- Test if a creditcard number fits any of the three banks (if so, it shouldn't fit the others)
+testCreditcards :: Integer -> Bool
+testCreditcards n = (n >= 0) --> not ((isVisa n && isMaster n) || (isMaster n && isAmericanExpress n) || (isAmericanExpress n && isVisa n))
 
 -- Exercise 8
 data Boy = Matthew | Peter | Jack | Arnold | Carl
