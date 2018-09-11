@@ -19,19 +19,12 @@ divide n m = rem m n == 0
 isPrime :: Integer -> Bool
 isPrime n = n > 1 && all (\ d -> not (divide d n)) [2..n-1]
 
--- NOT USED YET
-
 infix 1 --> 
 (-->) :: Bool -> Bool -> Bool
 p --> q = (not p) || q
 
 forall :: [a] -> (a -> Bool) -> Bool
 forall = flip all
-
-data Boy = Matthew | Peter | Jack | Arnold | Carl 
-           deriving (Eq,Show)
-
-boys = [Matthew, Peter, Jack, Arnold, Carl]
 
 {- 
     1. Redo exercises 2 & 3 of workshop 1 by writing quickcheck tests
@@ -44,7 +37,7 @@ sumSquared n = (n * (n + 1) * (2 * n + 1)) `div` 6
 
 sumSquaredInd :: Integer -> Integer
 sumSquaredInd 1 = 1
-sumSquaredInd n = n ^ 2 + sumSquared(n - 1)
+sumSquaredInd n = n ^ 2 + sumSquaredInd(n - 1)
 
 sumTripleSquared :: Integer -> Integer
 sumTripleSquared n = ( (n * (n + 1)) `div` 2) ^ 2
@@ -58,8 +51,7 @@ squaredTest n = sumSquared n == sumSquaredInd n
 
 tripledTest :: Integer -> Bool
 tripledTest n = sumTripleSquared (abs n) == sumTripleSquaredInd (abs n)
--- HAS TO BE ABSOLUTE
---  1 HOUR
+--  1 HOUR (Figure out Haskell)
 
 {-
     2. 
@@ -67,8 +59,6 @@ tripledTest n = sumTripleSquared (abs n) == sumTripleSquaredInd (abs n)
     P(A) = 2 ^ n, and testing the property for integer lists of the form 
     [1..n].
 -}
-
--- HAS TO BE ABSOLUTE 
 
 powerCard :: [Integer] -> Int
 powerCard n = length (subsequences n)
@@ -84,9 +74,7 @@ powerCardTest :: [Integer] -> Bool
 powerCardTest n = if powerCard n == powerCardPower n 
                     then powerCard n == powerCardInd n
                     else False
--- DOUBLE?
-
--- 30 MINS
+-- 30 MIN
 
 {- 
     3. Redo exercise 5 of Workshop 1 by replacing sets by lists,
@@ -109,7 +97,7 @@ perms (x:xs) = length (x:xs) * perms xs
 permsTest :: [Integer] -> Bool
 permsTest n = perms n == length (permutations n)
 
--- 10 MINS
+-- 10 MIN
 
 {- 
     4. The natural number 13 has the property that it is prime and its reversal,
@@ -132,15 +120,7 @@ reversalPrimes = filter prime (map reversal xs)
     Do you have to test that your answer is correct? How could this be checked?
 -}
 
--- genSums :: Int -> [Integer]
--- genSums = sum (take 101 (drop n primes)) 
-
--- genPrime :: Integer
--- genPrime =  head filter isPrime (genNumber head x, [ x | x <- [0..] ])
---     then n else tail x
-
-
--- If no prime, then tail and redo
+-- Skipped
 
 {-
     6. Using Haskell to refute a conjecture.
@@ -152,16 +132,86 @@ reversalPrimes = filter prime (map reversal xs)
     What is the smallest counterexample?
 -}
 
-conjectures :: Int
-conjectures = head [(product (take x primes) + 1) | x <- [1..], not (prime [product (take x primes)]) ]
+conjectures :: Integer
+conjectures = head [product (take x primes) + 1 | x <- [1..], not (prime (product (take x primes) + 1)) ]
 
-
+ -- 30 MIN
 
 {-
     Implement and test the Luhn Algorithm. Finally,
     design and implement a test for correctness of your implementation.
 -}
 
--- luhn :: Integer -> Bool
+--  Transform the Integer in to a list of integers and mirror them.
+digits :: Int -> [Int]
+digits x = (x `mod` 10) : digits (x `div` 10)
 
--- isAmericanExpress, isMaster, isVisa :: Integer -> Bool
+-- Double the digits, each second from the left (since mirrored list).
+doubleDigits :: [Int] -> [Int]
+doubleDigits [] = []
+doubleDigits (x:y:zs) = x : y * 2 : doubleDigits zs
+doubleDigits (x:xs) = x : []
+
+-- Downsize all digits greater than 9.
+downsize :: [Int] -> [Int]
+downsize xs = [if x > 9 then x - 9 else x | x <- xs ]
+
+-- This function should check whether an input number satisfies the Luhn formula.
+luhn :: Int -> Bool
+luhn x = sum (downsize (doubleDigits (digits x))) `mod` 10 == 0
+
+-- Mathematical calculations.
+isAmericanExpress, isMaster :: Int -> Bool
+isAmericanExpress x = x > 10 ^ 14 && x < 10 ^ 15 &&
+    luhn x && 
+    ( x `div` 10 ^ 13 == 34 || x `div` 10 ^ 13 == 37 )
+
+isMaster x = x > 10 ^ 15 && x < 10 ^ 16 &&
+    luhn x &&
+    ( (x `div` 10 ^ 14 > 50 && x `div` 10 ^ 14 < 56) ||
+    (x `div` 10 ^ 12 > 2220 && x `div` 10 ^ 12 < 2721) )
+
+isVisa x = head (digits x) == 4 && length (digits x) == 16 && luhn x
+
+-- Rens wrote great tests already. :)
+-- 45 MIN
+
+{- 
+    Assignment 8. Find out who is guilty (2 boys lie.)
+
+    Matthew: Carl didn't do it, and neither did I.
+    Peter: It was Matthew or it was Jack.
+    Jack: Matthew and Peter are both lying.
+    Arnold: Matthew or Peter is speaking the truth, but not both.
+    Carl: What Arnold says is not true.
+-}
+
+data Boy = Matthew | Peter | Jack | Arnold | Carl 
+           deriving (Eq, Show)
+
+boys = [Matthew, Peter, Jack, Arnold, Carl]
+
+-- Create logical conditions from the given information.
+accuses :: Boy -> Boy -> Bool
+accuses Matthew Carl = False
+accuses Matthew Matthew = False
+accuses Matthew _ = True
+accuses Peter Matthew = True
+accuses Peter Jack = True
+accuses Peter _ = False
+accuses Jack x = not (accuses Matthew x) && not (accuses Peter x)
+accuses Carl x = not (accuses Arnold x)
+accuses Arnold x = (accuses Matthew x && not (accuses Peter x)) ||
+                 ( not (accuses Matthew x) && accuses Peter x)
+
+
+-- Gives the list of accusers of each boy.
+accusers :: Boy -> [Boy]
+accusers x = [y | y <- boys, accuses y x ]
+
+-- The guilty one is accused by the 3 truth speakers.
+guilty, honest :: [Boy]
+honest = [y| x <- guilty, y <- (accusers x)]
+guilty = [x| x <- boys, length (accusers x) == 3]
+
+-- 45 MIN
