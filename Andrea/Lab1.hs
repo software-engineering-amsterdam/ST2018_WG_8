@@ -204,7 +204,6 @@ accuses Carl x = not (accuses Arnold x)
 accuses Arnold x = (accuses Matthew x && not (accuses Peter x)) ||
                  ( not (accuses Matthew x) && accuses Peter x)
 
-
 -- Gives the list of accusers of each boy.
 accusers :: Boy -> [Boy]
 accusers x = [y | y <- boys, accuses y x ]
