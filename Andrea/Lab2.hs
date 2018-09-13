@@ -10,24 +10,14 @@ infix 1 -->
 (-->) :: Bool -> Bool -> Bool
 p --> q = (not p) || q
 
-{-
-    Test  by counting the numbers in the quartiles
-    (0..0.25),[0.25..0.5),[0.5..0.75),[0.75..1)
-    and checking whether the proportions between these are as expected.
-    E.g., if you generate 10000 numbers,
-    then roughly 2500 of them should be in each quartile.
-    Implement this test, and report on the test results.
--}
-
+{- Assignment 1: Test the float generator. -}
+-- probs :: given random generator to find floats between 0.0 and 1.0.
 probs :: Int -> IO [Float]
 probs 0 = return []
 probs n = do
             p <- getStdRandom random
             ps <- probs (n - 1) 
             return (p:ps)
-            
--- testProbs :: Int ->
-    
 
 {-
     Assignment 2: Write a program (in Haskell) that takes a triple of integer
@@ -47,12 +37,12 @@ triangle a b c
     | (a^2 + b^2 == c^2) || (b^2 + c^2 == a^2) || (a^2 + c^2 == b^2) = Rectangular
     | otherwise = Other
 
-randomTriple :: IO [Integer, Integer, Integer]
-randomTriple = do 
-                x <- getRandomInt 100
-                y <- getRandomInt 100
-                z <- getRandomInt 100
-                    return [x, y, z]
+-- randomTriple :: IO [Integer, Integer, Integer]
+-- randomTriple = do 
+--                 x <- getRandomInt 100
+--                 y <- getRandomInt 100
+--                 z <- getRandomInt 100
+--                     return [x, y, z]
 
     -- 10 mins
 
