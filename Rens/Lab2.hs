@@ -3,7 +3,9 @@ module Lab2 where
 import Data.List
 import Data.Char
 import System.Random
+import System.Process
 import Test.QuickCheck
+import Test.QuickCheck.Monadic
 import Control.Monad
 
 forall :: [a] -> (a -> Bool) -> Bool
@@ -38,11 +40,8 @@ quantileCount = do
     print (first, second, third, fourth)
     putStrLn("Sum of the quantile contents:" )
     print (first + second + third + fourth)
-        where floats = (probs 100)
+        where floats = (probs 100000)
 
--- Sum of the quantiles does not add up to 10k. No matter the amount of 0's.
--- Although the distribution seems quite random but around 2500, the best way
--- to provide proof is by statistics.
 
 -- Exercise 2
 whatShape :: Int -> Int -> Int -> Shape
@@ -104,19 +103,57 @@ executeFuncs (x:xs) n = (x n) : executeFuncs xs n
 -- Finally, in order to test whether the funcitons are actually sorted, they
 -- should be equal to the sorted version of themselves.
 -- The Falses should be in the front of the list so if the properties are sorted
--- right, they should always produce the same result as the sorter boolean list
+-- right, they should always produce the same result as the sorted boolean list.
+-- Test idea credits: Sjoerd
 testIfOrdered = \x -> (executeFuncs (sortFunc(proplist)) x) == sort (executeFuncs (sortFunc(proplist)) x)
 
 
 -- Exercise 4
-isPermutation :: Eq => [a] -> [a] -> Bool
+-- Sort the input lists and then compare them.
+isPermutation :: Ord a => [a] -> [a] -> Bool
 isPermutation list1 list2 = compareLists sorted1 sorted2
     where
         sorted1 = sort(list1)
         sorted2 = sort(list2)
 
-compareLists :: Eq => [a] -> [a] -> Bool
+-- Comparison should check each element against the other and check if both lists are empty at the same time.
+compareLists :: Ord a => [a] -> [a] -> Bool
 compareLists [] [] = True
 compareLists x [] = False
 compareLists [] y = False
 compareLists (x:xs) (y:ys) = x == y && compareLists xs ys
+
+
+randomList :: Int -> Int -> IO([Int])
+randomList n x = replicateM n $ randomRIO (-x,x)
+
+comparePermlists :: Int -> IO Bool
+comparePermlists x = do
+    -- Generate a random list with a range of x and get a permutation of it.
+    let list = randomList 100 x
+    li <- list
+    let permt = head (permutations(li))
+    return (compareLists li permt)
+
+-- Use some monad-magic to make the IO bool output compatible with quickCheck.
+testPermlists :: Int -> Property
+testPermlists n = monadicIO $ do
+    values <- run (comparePermlists n)
+    assert (values == True)
+
+-- Exercise 5
+-- The derangement defines that all elements of list a should be in list b.
+-- However, no element may be in the same place as the other. This means,
+-- the lists do not have recurring elements. Properties are that the lists
+-- must have equal length and from start through finish no element may occur
+-- in the same location. The empty list is by definition a derangement because
+-- no elements occur in the same spot. Moreover, each element should be inside
+-- the other list. Therefore the properties are: if both lists contain nothing
+-- return true, if any of the lists contain something while the other does not
+-- return false. Finally and most importantly, x and y may never be the same.
+
+isDerangement :: Eq a => [a] -> [a] -> Bool
+isDerangement [] [] = True
+isDerangement x [] = False
+isDerangement [] y = False
+isDerangement (x:xs) (y:ys) = (x /= y) && isDerangement xs ys
