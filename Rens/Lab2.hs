@@ -11,7 +11,6 @@ import Control.Monad
 forall :: [a] -> (a -> Bool) -> Bool
 forall = flip all
 
-
 infix 1 -->
 
 (-->) :: Bool -> Bool -> Bool
@@ -27,23 +26,59 @@ probs n = do
 data Shape = NoTriangle | Equilateral
            | Isosceles  | Rectangular | Other deriving (Eq,Show)
 
--- Exercise 1 (Red Curry)
-quantileCount :: IO()
+
+-- Exercise 1
+-- This function generates floats using the probs function and multiplies them by 4.
+-- This makes it possible to round the numbers to integers and count the occurrences
+-- of numbers 1-4. This gives a count of the numbers in each quantile.
+quantileCount :: IO(Int, Int, Int, Int)
 quantileCount = do
-    putStrLn("Showing quantile sums (in order) for the porbs function")
     a <- floats
     let convertedFloats = map ceiling (map (fromIntegral (4) * ) a)
     let first = length(filter (== 1) convertedFloats)
     let second = length(filter (== 2) convertedFloats)
     let third = length(filter (== 3) convertedFloats)
     let fourth = length(filter (== 4) convertedFloats)
-    print (first, second, third, fourth)
-    putStrLn("Sum of the quantile contents:" )
-    print (first + second + third + fourth)
-        where floats = (probs 100000)
+    return (first, second, third, fourth)
+        where floats = (probs 1000)
+
+-- Execute a test that generates n lists of floats and averages the quantiles.
+-- The result is quite consistant with lists of 1000 floats, each quantile ususally
+-- contains 250-249 floats which changes every time.
+testN = 1000
+doQuantileCountTest = testQuantileCount (0,0,0,0) testN
+
+testQuantileCount :: (Int, Int, Int, Int) -> Int -> IO ()
+testQuantileCount (acc1, acc2, acc3, acc4) 0 = do
+    print (acc1 `div` testN, acc2 `div` testN, acc3 `div` testN, acc4 `div` testN)
+testQuantileCount (acc1, acc2, acc3, acc4) n = do
+    r <- quantileCount
+    let acc1' = acc1 + (first r)
+    let acc2' = acc2 + (second r)
+    let acc3' = acc3 + (third r)
+    let acc4' = acc4 + (fourth r)
+    testQuantileCount (acc1', acc2', acc3', acc4') (n - 1)
+
+-- Simple helper funcs to extract elements from a 4-tuple.
+first (x, _, _, _) = x
+second (_, x, _, _) = x
+third (_, _, x, _) = x
+fourth (_, _, _, x) = x
 
 
 -- Exercise 2
+-- I decided to implement the notriangle property first, this is the strongest
+-- property as all the others should be triangles and the sets of triangles and
+-- nottriangles are by definition disjunct. The second property is the equilateral
+-- property. Once again, the equilateral comes before isosceles because all equilateral
+-- triangles are by definition isosceles (if 3 sides are the same length then
+-- 2 of them are also the same length of course). Because isoceles triangles require
+-- 2 sides equal only, the equilaterals are a subset of the isoceles. The isosceles
+-- property is thus weaker. Finally, the rectangular property is tested, this property
+-- has no overlap with the other properties as for equilateral no 3 numbers exist
+-- that 2 * k^2 = k^2. They can also be isosceles (2,2,sqrt(8) for example) but
+-- they are no subsets of eachother so I've given priority to the isoceles.
+
 whatShape :: Int -> Int -> Int -> Shape
 whatShape x y z
     | isNoTriang x y z  = NoTriangle
@@ -52,12 +87,15 @@ whatShape x y z
     | isRect x y z = Rectangular
     | otherwise = Other
 
+-- isRect checks if any comination of the integers fits the pythagorean theorem.
+-- isNoTriang checks if any dimension is subzero or if the sum of any of two
+-- sides exceeds the remaining sides (a triangle cannot be formed then).
 isRect, isNoTriang :: Int -> Int -> Int -> Bool
 isRect x y z = ((x ^ 2) + (y ^ 2) == z ^ 2) || ((x ^ 2) + (z ^ 2) == y ^ 2) || ((z ^ 2) + (y ^ 2) == x ^ 2)
-isNoTriang x y z = not (x + y > z && x + z > y && z + y > x)
+isNoTriang x y z = not (x + y > z && x + z > y && z + y > x) && x > 0 && y > 0 && z > 0
+
 
 -- Exercise 3
--- a)
 myList :: [Int]
 myList = [-10..10]
 
@@ -86,8 +124,9 @@ sortFunc (x:xs) =
     ++ [x]
     ++ sortFunc [a | a <- xs, not (stronger myList a x)]
 
--- Secondly we sort the functions again, now with the names attached as tuples.
--- this way we also show the properties names in a showable format (String) in decending order.
+-- Secondly we sort the functions again, now with the names attached in tuples.
+-- this way we also show the properties names in a showable format (String) in
+-- decending order of stength.
 sortFuncName :: [(String, Int -> Bool)] -> [String]
 sortFuncName [] = []
 sortFuncName (x:xs) =
@@ -109,6 +148,15 @@ testIfOrdered = \x -> (executeFuncs (sortFunc(proplist)) x) == sort (executeFunc
 
 
 -- Exercise 4
+-- To check if one list is a permutation of the other we should make sure that
+-- each element occurs the same amount of times as each element in the proposed
+-- permutation. Furthermore, the lists should be the same length.
+-- To check this we sort both lists and compare them element by element.
+-- This way we ensure that the elements are exactly the same. If any list reaches
+-- its end before the other, we should return false. We can test this function by
+-- feeding it generated permutations of randomly generated lists of numbers and then
+-- comparing them using compareLists.
+
 -- Sort the input lists and then compare them.
 isPermutation :: Ord a => [a] -> [a] -> Bool
 isPermutation list1 list2 = compareLists sorted1 sorted2
@@ -171,8 +219,8 @@ subfactorial n = (n - 1) * (subfactorial (n - 1) + subfactorial (n - 2))
 -- Because generating and working with permutations of lists over 12 becomes
 -- unworkable, for the purpose of testing this function I will stick with the
 -- lists up to 9.
-testlists :: [[Int]]
-testlists = permutations [1..9]
+testLists :: [[Int]]
+testLists = permutations [1..9]
 
 -- Accumulate (acc) all lists for which true is returned from the isDerangement func.
 -- If the list of permutations is empty, check if the sum of derangements by function
@@ -184,3 +232,55 @@ testDerangements acc (x:xs) =
     if isDerangement [1..9] x
     then testDerangements (acc + 1) xs
     else testDerangements (acc) xs
+
+-- The derangements of a list are a subset of the permutations. Therefore we can
+-- say that the derangement property is stronger than the permutation property.
+
+
+-- Exercise 6
+-- Rot13 operates as a ceasar cipher, it rotates letters 13 spaces through the
+-- alphabet creating mappings like: abc -> nop. Because the alphabet is 26
+-- characters, nop will also map back to abc. The backbone of the function below
+-- was copied from rosettacode. Converted for string support.
+
+rot13 :: [Char] -> [Char]
+rot13 [] = []
+rot13 (c:cs)
+  | isAlpha c = chr (if_ (toLower c <= 'm') (+) (-) (ord c) 13) : rot13 cs
+  | otherwise = c : rot13 cs
+
+if_ :: Bool -> a -> a -> a
+if_ True x _ = x
+if_ False _ y = y
+
+-- Due to its inversibility we can test this cipher. First we input a string.
+-- Second we test whether the string has changed (it should have), then we turn
+-- it back and compare it to the original. These should be the same, case and all.
+-- The below strings have
+testStrings = ["simpletest", "harDer Test", "123 SuPerTest Which is longer"]
+
+testRot13 :: [[Char]] -> Bool
+testRot13 [] = True
+testRot13 (x:xs) = ((rot13 x) /= x && (rot13 $ rot13 x) == x) && testRot13 xs
+
+
+main :: IO()
+main = do
+    putStrLn("Testing if the quantiles are evenly spread over 1000 samples 1000 times:")
+    doQuantileCountTest
+    putStrLn("Should output around 250 each. (or 249 due to Haskell rounding.)")
+
+    putStrLn("\nOrdering properies stronger->weaker:")
+    print $ sortFuncName proplistNames
+    putStrLn("Testing whether ordering is correct with quickCheck inputting different domains:")
+    quickCheck testIfOrdered
+
+    putStrLn("\nTest if we can correctly detect if a list is a permutation of another list:")
+    quickCheck testPermlists
+
+    putStrLn("\nTest if we can correctly detect if a list is a derangement of another list:")
+    print $ testDerangements 0 testLists
+
+    putStrLn("\nTest if the rot13 cipher is functioning properly with string input:")
+    print $ testRot13 testStrings
+    putStrLn("\nDone!")
