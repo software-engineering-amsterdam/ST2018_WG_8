@@ -4,6 +4,7 @@ import Data.List
 import Data.Char
 import System.Random
 import System.Process
+import System.IO.Unsafe
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import Control.Monad
@@ -263,6 +264,42 @@ testRot13 :: [[Char]] -> Bool
 testRot13 [] = True
 testRot13 (x:xs) = ((rot13 x) /= x && (rot13 $ rot13 x) == x) && testRot13 xs
 
+
+-- Exercise 7
+testIban1 = "FR76 3000 6000 0112 3456 7890 189"
+testIban2 = "GR96 0810 0010 0000 0123 4567 890"
+
+-- Lets implement the iban validation algorithm. First filter out spaces for
+-- ease of parsing. Now move the first 4 digits/letters to the end.
+moveLettersToEnd,filterOutSpaces :: [Char] -> [Char]
+filterOutSpaces xs = filter (/= ' ') xs
+moveLettersToEnd xs = (drop 4 (filterOutSpaces xs)) ++ (take 4 (filterOutSpaces xs))
+
+-- Now for each letter convert it to 10 + its index in the alphabet (resulting in
+-- a -87 conversion starting with A at 0).
+lettersToNum :: [Char] -> [Char]
+lettersToNum [] = ""
+lettersToNum (c:cs) =
+    if isAlpha c
+    then show(ord (toLower c) - 87) ++ (lettersToNum cs )
+    else [c] ++ (lettersToNum cs)
+
+-- Finally check if the resulting number mod 97 equals 1, if so, the iban is valid.
+-- This does not mean the iban is in use...
+validateIBAN :: [Char] -> Bool
+validateIBAN xs = (read $ lettersToNum $ moveLettersToEnd $ filterOutSpaces xs) `mod` 97 == 1
+
+
+-- Now for testing lets build a IBAN generator.
+-- We will build a generator for french IBAN numbers.
+frHead = "GB00"
+
+-- First generate an ibansized number (without the head (FR00)).
+randomIBAN :: IO Integer
+randomIBAN = randomRIO(10000000000000000000000,99999999999999999999999)
+
+-- Convert the number to a string with the proper head.
+numToIBAN = read <$> randomIBAN
 
 main :: IO()
 main = do
