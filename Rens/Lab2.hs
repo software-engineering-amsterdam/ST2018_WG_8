@@ -157,3 +157,30 @@ isDerangement [] [] = True
 isDerangement x [] = False
 isDerangement [] y = False
 isDerangement (x:xs) (y:ys) = (x /= y) && isDerangement xs ys
+
+-- From the definition of derangements, the amount of derangements from a list
+-- with n elements is !n (or subfactorial n). In order to test this function
+-- I want to have a function that sums all the trues of isDerangement on the
+-- permutations of a list. This should be no larger or smaller than !n.
+-- The following funciton comes from rosettacode.
+subfactorial :: (Eq a, Num a) => a -> a
+subfactorial 0 = 1
+subfactorial 1 = 0
+subfactorial n = (n - 1) * (subfactorial (n - 1) + subfactorial (n - 2))
+
+-- Because generating and working with permutations of lists over 12 becomes
+-- unworkable, for the purpose of testing this function I will stick with the
+-- lists up to 9.
+testlists :: [[Int]]
+testlists = permutations [1..9]
+
+-- Accumulate (acc) all lists for which true is returned from the isDerangement func.
+-- If the list of permutations is empty, check if the sum of derangements by function
+-- equals the factorial of 9 (length of the inputlists). If so, isDerangement works
+-- properly for lists up to 9 (ive tested it up untill 10, this is just for speeds sake)
+testDerangements :: Int -> [[Int]] -> Bool
+testDerangements acc [] = acc == subfactorial 9
+testDerangements acc (x:xs) =
+    if isDerangement [1..9] x
+    then testDerangements (acc + 1) xs
+    else testDerangements (acc) xs
