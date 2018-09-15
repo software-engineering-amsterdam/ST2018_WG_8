@@ -292,20 +292,73 @@ validateIBAN xs = (read $ lettersToNum $ moveLettersToEnd $ filterOutSpaces xs) 
 
 -- Now for testing lets build a IBAN generator.
 -- We will build a generator for french IBAN numbers.
-frHead = "GB00"
+country, frHead :: String
+country = "FR"
+frHead = country ++ "00"
 
 -- First generate an ibansized number (without the head (FR00)).
 randomIBAN :: IO Integer
 randomIBAN = randomRIO(10000000000000000000000,99999999999999999999999)
 
 -- Convert the number to a string with the proper head.
-numToIBAN = read <$> randomIBAN
+numToIBAN :: IO String
+numToIBAN = do
+    a <- (show <$> randomIBAN)
+    return a
+
+generateCorrectIBAN :: IO Integer -> IO [Char]
+generateCorrectIBAN n = do
+    -- Generate a basic IBAN format number and add the head at the end.
+    base <- n
+    let baseWithHead = ((show $ base) ++ frHead)
+
+    -- Transform letters into numbers
+    let convLetBase = lettersToNum baseWithHead
+
+    -- Turn back into Integer (Add 0 to avoid ambiguous typing).
+    let ibanNum = 0 + (read $ convLetBase)
+
+    -- Now mod the iban with 97, subtract 98 and replace the check digit with it.
+    let remainder = ibanNum `mod` 97
+
+    -- If the check digit is <10 add a zero for padding.
+    let newHead = country ++ addZeroPadding(show (98 - remainder))
+    let newIban = newHead ++ (show base)
+    putStrLn("Generated IBAN: " ++ newIban)
+    return newIban
+
+-- Adds padding to strings containing a sub 10 number. (Maintains iban length)
+addZeroPadding :: String -> String
+addZeroPadding s
+    | (read s) < 10 = "0" ++ s
+    | otherwise = s
+
+-- Tests if the generated IBANs are accepted, does this n times.
+testIBANvalidator :: Integer -> IO Bool
+testIBANvalidator 0 = do
+    return True
+testIBANvalidator n = do
+    -- Get the test result.
+    testResult <- (validateIBAN <$> (generateCorrectIBAN randomIBAN))
+
+    -- Generate the other results recursively.
+    let results = (testIBANvalidator (n - 1))
+    boolOthers <- results
+
+    -- Returns true if all results are True.
+    return ((testResult &&) boolOthers)
+
+-- Simple function to print the result of the iban test in the main function.
+printIOBool :: IO Bool -> IO ()
+printIOBool b = do
+    b0 <- b
+    print b0
 
 main :: IO()
 main = do
     putStrLn("Testing if the quantiles are evenly spread over 1000 samples 1000 times:")
     doQuantileCountTest
-    putStrLn("Should output around 250 each. (or 249 due to Haskell rounding.)")
+    putStrLn("Should output around 250 each. (or 249 due to rounding method.)")
 
     putStrLn("\nOrdering properies stronger->weaker:")
     print $ sortFuncName proplistNames
@@ -320,4 +373,7 @@ main = do
 
     putStrLn("\nTest if the rot13 cipher is functioning properly with string input:")
     print $ testRot13 testStrings
+
+    putStrLn("\nTest if generated IBANs are validated by the validateIBAN function:")
+    printIOBool (testIBANvalidator 10)
     putStrLn("\nDone!")
