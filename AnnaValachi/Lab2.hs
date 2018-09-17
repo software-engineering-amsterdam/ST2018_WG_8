@@ -24,7 +24,7 @@ data Shape = NoTriangle | Equilateral | Isosceles  | Rectangular | Other derivin
 forall :: [a] -> (a -> Bool) -> Bool
 forall = flip all
 
-		   
+
 ---------------------1
 ---------------------2 Recognizing triangles
 
@@ -91,9 +91,10 @@ sortStringProp :: [(String,Int->Bool)]->[(String,Int->Bool)]
 sortStringProp [] = []
 sortStringProp (x:xs) = 
     sortStringProp[a|a<-xs, stronger myList (snd a) (snd x)] --for every a (a=(String,Integer->Bool)) in xs, if a(Bool) is stronger than x(head) then make it the head of the list
-	++[(fst x, snd x)]
-	++sortStringProp[a|a<-xs, weaker myList (snd a) (snd x)]
-	
+    ++[(fst x, snd x)]
+    ++sortStringProp[a|a<-xs, weaker myList (snd a) (snd x)]
+
+
 funcList :: [(String,Int->Bool)]->Int->[(String,Bool)]
 funcList [] _ = []
 funcList (x:xs) n = (fst x, ((snd x) n)) : funcList xs n
@@ -137,7 +138,28 @@ deran [] = []
 deran l = [ x | x <- (permutations l), (isDerangement x l)]
 
 
---------------------7 Iban
+--------------------6 Rot13
+--ROT13 ("rotate by 13 places") is a simple letter substitution cipher that replaces a letter with the 13th letter after it in the alphabet.
+
+funcRot13 :: [Char]->[Char]
+funcRot13 [] = []
+funcRot13 (x:xs) = if (isLetter x) then (if (toUpper x <= 'M') then chr((ord x) +13) : funcRot13 xs else chr((ord x) -13) : funcRot13 xs)
+               else x : funcRot13 xs
+
+
+--------------------7 Iban WRONG!
+rotate :: Int -> [a] -> [a]
+rotate n xs = take (length xs) (drop n (cycle xs))
+
+fixStr :: [Char]->[Char]
+fixStr [] = []
+fixStr xs = rotate 4 ( filter (/= ' ') xs)
+
+convert2Int :: [Char]->[Char]
+convert2Int [] = []
+convert2Int (x:xs) = if (isLetter x) then (ord (toUpper x) - 55) ++ convert2Int xs
+                     else [x] ++ convert2Int xs
+
 
 
 
