@@ -188,17 +188,21 @@ testPermlists n = monadicIO $ do
     Deliverables: Haskell program, concise test report, indication of time spent.
 -}
 
--- isDerangement creates two permutations of the same list.
+
 -- The lists must have exactly the same elements but in different positions.
 isDerangement :: Ord a => [a] -> [a] -> Bool
 isDerangement list1 list2 = (isPermutation list1 list2) && (checkNotEq list1 list2)
 
--- Function to check if two elements in the list are the same.
+-- Function to check if two elements in the list are not the same.
 checkNotEq :: Eq a => [a] -> [a] -> Bool
 checkNotEq [] [] = True
 checkNotEq x [] = True
 checkNotEq [] y = True
 checkNotEq (x:xs) (y:ys) = not (x == y) && checkNotEq xs ys
+
+deran :: Ord a => [a] -> [[a]]
+deran [] = []
+deran l = [ x | x <- (permutations l), (isDerangement x l)]
 
 -- From the definition of Derangements, the amount of derangements from a list
 -- with n elements is !n (or subfactorial n). Found this on Rosettacode.
