@@ -50,25 +50,41 @@ testProbs = do
 data Shape = NoTriangle | Equilateral | Isosceles | Rectangular | Other
     deriving (Eq, Show)
 
--- Function that checks the triplet for each of the possible triangles and their conditions.
 triangle :: Integer -> Integer -> Integer -> Shape
 triangle a b c
-    | ( a > b + c) || (b > c + a) || (c > a + b) || (a < 0 || b < 0 || c < 0)= NoTriangle
-    | (a == b) && (b == c) = Equilateral
-    | ((a == b) && (a /= c)) || ((a == c) && (a /= b)) || ((b == c) && (b /= a)) = Isosceles
-    | (a^2 + b^2 == c^2) || (b^2 + c^2 == a^2) || (a^2 + c^2 == b^2) = Rectangular
-    | otherwise = Other
+    | notTriangleF a b c = NoTriangle
+    | equilateralF a b c = Equilateral
+    | isoscelesF a b c = Isosceles
+    | rectangularF a b c = Rectangular
+    | otherF a b c = Other  
 
+-- Function to match the properties to the right triangle.
+notTriangleF, equilateralF, rectangularF, isoscelesF, otherF :: Integer->Integer->Integer->Bool
+notTriangleF a b c = a + b < c || a + c < b || b + c < a || a < 0 || b < 0 || c < 0
+equilateralF a b c = a == b && b == c && not (notTriangleF a b c)
+rectangularF a b c = not (notTriangleF a b c) && 
+    (a^2 + b^2 == c^2 || c^2 + b^2 == a^2 || a^2 + c^2 == b^2)
+isoscelesF a b c = not (notTriangleF a b c) && not (equilateralF a b c) &&
+    (a == b || b == c || a == c)
+otherF a b c = not (notTriangleF a b c) && not (equilateralF a b c) &&
+    not (rectangularF a b c) && not (isoscelesF a b c)
+
+-- Test functions below. They use the conditions of the definitions above,
+-- so this is not the best way to test. You would rather check other 
+-- mathematical properties such as the correct angles, but this is quite hard
+-- in Haskell with just the lengths of the vertices.
 testNoTriangles1, testNoTriangles2, testNoTriangles3 :: Integer -> Integer -> Integer -> Bool
 testNoTriangles1 a b c = (a > b + c) --> triangle a b c == NoTriangle
 testNoTriangles2 a b c = (b > c + a) --> triangle a b c == NoTriangle
 testNoTriangles3 a b c = (c > a + b) --> triangle a b c == NoTriangle
 
--- THIS IS WRONG, CHECK WHY!
 testIsosceles1, testIsosceles2, testIsosceles3 :: Integer -> Integer -> Bool
-testIsosceles1 a b = (a > 0 && b > 0 && a /= b) --> triangle a a b == Isosceles
-testIsosceles2 a b = (a > 0 && b > 0 && a /= b) --> triangle b a a == Isosceles
-testIsosceles3 a b = (a > 0 && b > 0 && a /= b) --> triangle a b a == Isosceles
+testIsosceles1 a b = (a > 0 && b > 0 && a /= b &&
+    not (notTriangleF a a b)) --> triangle a a b == Isosceles
+testIsosceles2 a b = (a > 0 && b > 0 && a /= b &&
+    not (notTriangleF b a a)) --> triangle b a a == Isosceles
+testIsosceles3 a b = (a > 0 && b > 0 && a /= b &&
+    not (notTriangleF a b a)) --> triangle a b a == Isosceles
 
 testRectangular1, testRectangular2, testRectangular3 :: Integer -> Integer -> Integer -> Bool
 testRectangular1 a b c = (a > 0 && b > 0 && c > 0 && a^2 + b^2 == c^2) 
@@ -102,7 +118,7 @@ myList = [-10..10]
 
 -- Create a tuple list of (name, property).
 propList = [("propA1", propA1),("propA2", propA2),
-            ("propB1", propB1), ("propC1", propC1)]
+    ("propB1", propB1), ("propC1", propC1)]
 
 -- Function to sort the tuples based on the properties in a quickSort manner.
 sortTuples :: [(String, Int -> Bool)] -> [(String, Int -> Bool)]
@@ -157,8 +173,7 @@ comparePermlists x = do
     let list = randomList 100 x
     li <- list
     let permt = head (permutations (li))
-    return (compareLists li permt)
-    -- TO DO: Something was wrong here?
+    return (isPermutation li permt)
 
 -- Use some monad-magic to make the IO bool output compatible with quickCheck.
 testPermlists :: Int -> Property
@@ -239,8 +254,6 @@ testNumberSupport = (rot13("1est") /= "1est") && (rot13(rot13("1est")) == "1est"
 testCapitalisation :: Bool
 testCapitalisation = (rot13("Test") /= "Test") && (rot13(rot13("Test")) == "Test")
 
-
-
 {-
     Exercise 7: Write a function IBAN :: String -> Bool.
     Next, test your implementation using some suitable list of examples.
@@ -261,9 +274,9 @@ moveLettersToEnd xs = (drop 4 (filterOutSpaces xs)) ++ (take 4 (filterOutSpaces 
 lettersToNum :: [Char] -> [Char]
 lettersToNum [] = ""
 lettersToNum (c:cs) =
-                        if isAlpha c
-                        then show (ord (toLower c) - 87) ++ (lettersToNum cs )
-                        else [c] ++ (lettersToNum cs)
+    if isAlpha c
+    then show (ord (toLower c) - 87) ++ (lettersToNum cs )
+    else [c] ++ (lettersToNum cs)
 
 -- Function to create the head of French IBANs.
 countryCode, frHead :: String
@@ -302,8 +315,8 @@ generateCorrectIBAN n = do
 -- Adds padding to strings containing a sub 10 number. (Maintains IBAN length)
 addPadding :: String -> String
 addPadding s
-            | (read s) < 10 = "0" ++ s
-            | otherwise = s
+    | (read s) < 10 = "0" ++ s
+    | otherwise = s
 
 -- Function the test if the generated IBANs are accepted, do this n times.
 testIBANvalidator :: Integer -> IO Bool
