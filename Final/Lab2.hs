@@ -4,14 +4,14 @@ module Lab2 where
 import Control.Monad
 import Data.Char
 import Data.List
-import Data.Ord 
+import Data.Ord
 import System.Random
 import System.Process
 import System.IO.Unsafe
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 
-infix 1 --> 
+infix 1 -->
 
 (-->) :: Bool -> Bool -> Bool
 p --> q = (not p) || q
@@ -19,10 +19,10 @@ p --> q = (not p) || q
 forall :: [a] -> (a -> Bool) -> Bool
 forall = flip all
 
-{- 
+{-
     Exercise 1: Test the float generator.
     Since (0.00 - 0.25) and (0.75 - 1.00) are sets with 1 float extra, perhaps
-    you could see this back in the quartile distribution. I tested it with 
+    you could see this back in the quartile distribution. I tested it with
     100.000 random floats, but this was not seen in the results.
 -}
 
@@ -31,13 +31,13 @@ probs :: Int -> IO [Float]
 probs 0 = return []
 probs n = do
             p <- getStdRandom random
-            ps <- probs (n - 1) 
+            ps <- probs (n - 1)
             return (p:ps)
-            
--- Function that creates 10.000 floats and then filters them by value per quartile. 
--- It returns the size of each list (4 in total) which should all be around 2500.            
+
+-- Function that creates 10.000 floats and then filters them by value per quartile.
+-- It returns the size of each list (4 in total) which should all be around 2500.
 testProbs :: IO [Int]
-testProbs = do 
+testProbs = do
                 sample <- probs 10000
                 return ([length [x | x <- sample, x > 0 && x < 0.25],
                          length [x | x <- sample, x >= 0.25 && x < 0.50],
@@ -57,7 +57,7 @@ data Shape = NoTriangle | Equilateral | Isosceles | Rectangular | Other
 
 -- Function that checks the triplet for each of the possible triangles and their conditions.
 triangle :: Integer -> Integer -> Integer -> Shape
-triangle a b c 
+triangle a b c
     | ( a > b + c) || (b > c + a) || (a < c + b) || (a < 0 || b < 0 || c < 0)= NoTriangle
     | (a == b) && (b == c) = Equilateral
     | ((a == b) && (a /= c)) || ((a == c) && (a /= b)) || ((b == c) && (b /= a)) = Isosceles
@@ -66,8 +66,8 @@ triangle a b c
 
 -- TO DO: TESTING!!!!
 -- Aynel did quickcheck testing
-    
-{- 
+
+{-
     Exercise 3: Implement all properties from the Exercise 3 from Workshop 2
     as Haskell functions of type Int -> Bool. Consider a domain like [(−10)..10].
     Provide a descending strength list of all the implemented properties.
@@ -80,8 +80,8 @@ weaker   xs p q = stronger xs q p
 
 propA1, propA2, propB1, propC1 :: Int -> Bool
 propA1 = \x -> ((even x) && (x>3))
-propA2 x = even x 
-propB1 = \x -> (((even x) || (x>3)) || even x) 
+propA2 x = even x
+propB1 = \x -> (((even x) || (x>3)) || even x)
 propC1 = \ x -> (((even x) && (x > 3)) || even x)
 
 myList = [-10..10]
@@ -93,8 +93,8 @@ propList = [("propA1", propA1),("propA2", propA2),
 -- Function to sort the tuples based on the properties in a quickSort manner.
 sortTuples :: [(String, Int -> Bool)] -> [(String, Int -> Bool)]
 sortTuples [] = []
-sortTuples (x:xs) = 
-    sortTuples [ a | a <- xs, stronger myList (snd a) (snd x)] 
+sortTuples (x:xs) =
+    sortTuples [ a | a <- xs, stronger myList (snd a) (snd x)]
     ++ [(fst x, snd x)]
     ++ sortTuples [ a | a <- xs, weaker myList (snd a) (snd x)]
 
@@ -144,8 +144,8 @@ comparePermlists x = do
     let list = randomList 100 x
     li <- list
     let permt = head (permutations (li))
-    return (compareLists li permt) 
-    -- TO DO: Something was wrong here? 
+    return (compareLists li permt)
+    -- TO DO: Something was wrong here?
 
 -- Use some monad-magic to make the IO bool output compatible with quickCheck.
 testPermlists :: Int -> Property
@@ -153,7 +153,7 @@ testPermlists n = monadicIO $ do
     values <- run (comparePermlists n)
     assert (values == True)
 
-{- 
+{-
     Exercise 5: Give a Haskell implementation of a property isDerangement.
     Give a Haskell implementation of a function deran.
     Can you automate the test process?
@@ -184,7 +184,7 @@ testLists = permutations [1..9]
 
 -- Function to accumulate all lists for which isDerangement == True.
 -- If the list of permutations is empty, check if the sum of derangements by function
--- equals the factorial of 9 (length of the inputlists). 
+-- equals the factorial of 9 (length of the inputlists).
 -- If so, isDerangement works properly for lists up to 9.
 testDerangements :: Int -> [[Int]] -> Bool
 testDerangements acc [] = acc == subfactorial 9
@@ -193,7 +193,7 @@ testDerangements acc (x:xs) =
     then testDerangements (acc + 1) xs
     else testDerangements (acc) xs
 
-{- 
+{-
     Exercise 6: First, give a specification of ROT13.
     Next, give a simple implementation of ROT13.
     Finally, turn the specification into a series of QuickCheck
@@ -225,7 +225,7 @@ testRot13 (x:xs) = ((rot13 x) /= x && (rot13 $ rot13 x) == x) && testRot13 xs
 -- TO DO: Look at this a bit more.
 
 
-{- 
+{-
     Exercise 7: Write a function IBAN :: String -> Bool.
     Next, test your implementation using some suitable list of examples.
     Can you automate the test process?
@@ -258,8 +258,8 @@ frHead = countryCode ++ "00"
 randomIBAN :: IO Integer
 randomIBAN = randomRIO(10000000000000000000000, 99999999999999999999999)
 
--- TO DO: THIS IS NOT BEING USED? 
--- -- Convert the number to a string with the proper head. 
+-- TO DO: THIS IS NOT BEING USED?
+-- -- Convert the number to a string with the proper head.
 -- numToIBAN :: IO String
 -- numToIBAN = do
 --     a <- (show <$> randomIBAN)
@@ -268,7 +268,7 @@ randomIBAN = randomRIO(10000000000000000000000, 99999999999999999999999)
 -- Check if the resulting number mod 97 equals 1, if so, the IBAN is valid.
 validateIBAN :: [Char] -> Bool
 validateIBAN xs = (read $ lettersToNum $ moveLettersToEnd $ filterOutSpaces xs) `mod` 97 == 1
-        
+
 generateCorrectIBAN :: IO Integer -> IO [Char]
 generateCorrectIBAN n = do
     -- Generate a basic IBAN format number and add the head at the end.
@@ -336,11 +336,12 @@ main = do
     print $ testDerangements 0 testLists
 
     putStrLn("\nTest if the rot13 cipher is functioning properly with string input:")
-    print $ testRot13 testStrings
-
+    putStrLn ((show testRot13) ++ " for general functioning.")
+    putStrLn ((show testCapitalisation) ++ " for capitalisation.")
+    putStrLn ((show testSpacing) ++ " for spacing.")
+    putStrLn ((show testNumberSupport) ++ " for non-alphabetic support.")
 
     -- TO
     putStrLn("\nTest if generated IBANs are validated by the validateIBAN function:")
     printIOBool (testIBANvalidator 10)
     putStrLn("\nDone!")
-    
