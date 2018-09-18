@@ -256,14 +256,20 @@ if_ False _ y = y
 
 -- Due to its inversibility we can test this cipher. First we input a string.
 -- Second we test whether the string has changed (it should have), then we turn
--- it back and compare it to the original. These should be the same, case and all.
--- The below strings have
-testStrings = ["simpletest", "harDer Test", "123 SuPerTest Which is longer"]
+-- it back and compare it to the original. These should be the same.
+-- The below tests test for some properties: case, number, spacing and general inversibility.
+-- These properties are neccessary to maintain proper encoding and decoding!
+testRot13 :: Bool
+testRot13 = (rot13("test") /= "test") && (rot13(rot13("test")) == "test")
 
-testRot13 :: [[Char]] -> Bool
-testRot13 [] = True
-testRot13 (x:xs) = ((rot13 x) /= x && (rot13 $ rot13 x) == x) && testRot13 xs
+testSpacing :: Bool
+testSpacing = (rot13("te st") /= "te st") && (rot13(rot13("te st")) == "te st")
 
+testNumberSupport :: Bool
+testNumberSupport = (rot13("1est") /= "1est") && (rot13(rot13("1est")) == "1est")
+
+testCapitalisation :: Bool
+testCapitalisation = (rot13("Test") /= "Test") && (rot13(rot13("Test")) == "Test")
 
 -- Exercise 7
 testIban1 = "FR76 3000 6000 0112 3456 7890 189"
@@ -372,7 +378,10 @@ main = do
     print $ testDerangements 0 testLists
 
     putStrLn("\nTest if the rot13 cipher is functioning properly with string input:")
-    print $ testRot13 testStrings
+    putStrLn ((show testRot13) ++ " for general functioning.")
+    putStrLn ((show testCapitalisation) ++ " for capitalisation.")
+    putStrLn ((show testSpacing) ++ " for spacing.")
+    putStrLn ((show testNumberSupport) ++ " for non-alphabetic support.")
 
     putStrLn("\nTest if generated IBANs are validated by the validateIBAN function:")
     printIOBool (testIBANvalidator 10)
