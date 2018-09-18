@@ -1,4 +1,3 @@
-
 module Lab2 where
 
 import Control.Monad
@@ -21,9 +20,6 @@ forall = flip all
 
 {-
     Exercise 1: Test the float generator.
-    Since (0.00 - 0.25) and (0.75 - 1.00) are sets with 1 float extra, perhaps
-    you could see this back in the quartile distribution. I tested it with
-    100.000 random floats, but this was not seen in the results.
 -}
 
 -- Given function to randomly generate floats between 0.0 and 1.0.
@@ -45,8 +41,7 @@ testProbs = do
                          length [x | x <- sample, x >= 0.75 && x < 1]])
 
 {-
-    Exercise 2: Write a program (in Haskell) that takes a triple of integer
-    values as arguments, and gives as output one of the following statements:
+    Exercise 2: With 3 integers, give as output one of the following statements:
     Not a triangle, Equilateral, Rectangular, Isosceles or Other.
     Deliverables: Haskell program, concise test report, indication of time spent.
 -}
@@ -58,14 +53,34 @@ data Shape = NoTriangle | Equilateral | Isosceles | Rectangular | Other
 -- Function that checks the triplet for each of the possible triangles and their conditions.
 triangle :: Integer -> Integer -> Integer -> Shape
 triangle a b c
-    | ( a > b + c) || (b > c + a) || (a < c + b) || (a < 0 || b < 0 || c < 0)= NoTriangle
+    | ( a > b + c) || (b > c + a) || (c > a + b) || (a < 0 || b < 0 || c < 0)= NoTriangle
     | (a == b) && (b == c) = Equilateral
     | ((a == b) && (a /= c)) || ((a == c) && (a /= b)) || ((b == c) && (b /= a)) = Isosceles
     | (a^2 + b^2 == c^2) || (b^2 + c^2 == a^2) || (a^2 + c^2 == b^2) = Rectangular
     | otherwise = Other
 
--- TO DO: TESTING!!!!
--- Aynel did quickcheck testing
+testNoTriangles1, testNoTriangles2, testNoTriangles3 :: Integer -> Integer -> Integer -> Bool
+testNoTriangles1 a b c = (a > 0 && b > 0 && c > 0 && a > b + c) --> triangle a b c == NoTriangle
+testNoTriangles2 a b c = (a > 0 && b > 0 && c > 0 && b > c + a) --> triangle a b c == NoTriangle
+testNoTriangles3 a b c = (a > 0 && b > 0 && c > 0 && c > a + b) --> triangle a b c == NoTriangle
+
+
+-- THIS IS WRONG, CHECK WHY!
+testIsosceles1, testIsosceles2, testIsosceles3 :: Integer -> Integer -> Bool
+testIsosceles1 a b = (a > 0 && b > 0 && a /= b) --> triangle a a b == Isosceles
+testIsosceles2 a b = (a > 0 && b > 0 && a /= b) --> triangle b a a == Isosceles
+testIsosceles3 a b = (a > 0 && b > 0 && a /= b) --> triangle a b a == Isosceles
+
+testRectangular1, testRectangular2, testRectangular3 :: Integer -> Integer -> Integer -> Bool
+testRectangular1 a b c = (a > 0 && b > 0 && c > 0 && a^2 + b^2 == c^2) 
+                        --> triangle a b c == Rectangular
+testRectangular2 a b c = (a > 0 && b > 0 && c > 0 && b^2 + c^2 == a^2) 
+                        --> triangle a b c == Rectangular
+testRectangular3 a b c = (a > 0 && b > 0 && c > 0 && a^2 + c^2 == b^2) 
+                        --> triangle a b c == Rectangular
+
+testEquilateral :: Integer -> Bool
+testEquilateral a = (a > 0) --> triangle a a a == Equilateral
 
 {-
     Exercise 3: Implement all properties from the Exercise 3 from Workshop 2
@@ -113,8 +128,7 @@ testOrder = \x -> (funcList (sortTuples(propList)) x) ==
 
 {-
     Exercise 4: Create a function that returns True when its arguments are permutations of each other.
-    Next, define some testable properties for this function,
-    and use a number of well-chosen lists to test isPermutation.
+    Define some testable properties for this function.
     What does this mean for your testing procedure?
     Deliverables: Haskell program, concise test report, indication of time spent.
 -}
@@ -213,16 +227,19 @@ if' :: Bool -> a -> a -> a
 if' True x _ = x
 if' False _ y = y
 
--- Due to its inversibility we can test this cipher. First we input a string.
--- Second we test whether the string has changed (it should have), then we turn
--- it back and compare it to the original. These should be the same, case and all.
--- The below strings have
-testStrings = ["simpletest", "harDer Test", "123 SuPerTest Which is longer"]
+-- Test functions.
+testRot13 :: Bool
+testRot13 = (rot13("test") /= "test") && (rot13(rot13("test")) == "test")
 
-testRot13 :: [[Char]] -> Bool
-testRot13 [] = True
-testRot13 (x:xs) = ((rot13 x) /= x && (rot13 $ rot13 x) == x) && testRot13 xs
--- TO DO: Look at this a bit more.
+testSpacing :: Bool
+testSpacing = (rot13("te st") /= "te st") && (rot13(rot13("te st")) == "te st")
+
+testNumberSupport :: Bool
+testNumberSupport = (rot13("1est") /= "1est") && (rot13(rot13("1est")) == "1est")
+
+testCapitalisation :: Bool
+testCapitalisation = (rot13("Test") /= "Test") && (rot13(rot13("Test")) == "Test")
+
 
 
 {-
@@ -258,13 +275,6 @@ frHead = countryCode ++ "00"
 randomIBAN :: IO Integer
 randomIBAN = randomRIO(10000000000000000000000, 99999999999999999999999)
 
--- TO DO: THIS IS NOT BEING USED?
--- -- Convert the number to a string with the proper head.
--- numToIBAN :: IO String
--- numToIBAN = do
---     a <- (show <$> randomIBAN)
---     return a
-
 -- Check if the resulting number mod 97 equals 1, if so, the IBAN is valid.
 validateIBAN :: [Char] -> Bool
 validateIBAN xs = (read $ lettersToNum $ moveLettersToEnd $ filterOutSpaces xs) `mod` 97 == 1
@@ -293,8 +303,8 @@ generateCorrectIBAN n = do
 -- Adds padding to strings containing a sub 10 number. (Maintains IBAN length)
 addPadding :: String -> String
 addPadding s
-                | (read s) < 10 = "0" ++ s
-                | otherwise = s
+            | (read s) < 10 = "0" ++ s
+            | otherwise = s
 
 -- Function the test if the generated IBANs are accepted, do this n times.
 testIBANvalidator :: Integer -> IO Bool
@@ -317,31 +327,47 @@ printIOBool b = do
     b0 <- b
     print b0
 
-
--- TO DO: The testing should be more extensively.
 main :: IO()
 main = do
-    putStrLn("Testing probs over 10.000 samples (should be +- 2500 each):")
-    testProbs
+    putStrLn("Testing exercise 1 with 10.000 samples (should be +- 2500 each):")
+    exercise1 <- testProbs
+    print exercise1
 
-    -- putStrLn("\nOrdering properies stronger->weaker:")
-    -- print $ sortFuncName proplistNames
-    -- putStrLn("Testing whether ordering is correct with quickCheck inputting different domains:")
-    -- quickCheck testIfOrdered
+    putStrLn("Testing exercise 2.")
+    putStrLn("Checking Equilateral:")
+    quickCheck testEquilateral
 
-    putStrLn("\nTest if we can correctly detect if a list is a permutation of another list:")
+    putStrLn("Checking Isosceles:")
+    quickCheck testIsosceles1
+    quickCheck testIsosceles2
+    quickCheck testIsosceles3
+
+    putStrLn("Checking Rectangular:")
+    quickCheck testRectangular1
+    quickCheck testRectangular2
+    quickCheck testRectangular3
+
+    putStrLn("Checking No Triangles:")
+    quickCheck testNoTriangles1
+    quickCheck testNoTriangles2
+    quickCheck testNoTriangles3
+
+    putStrLn("Testing exercise 3 (compare properties' strength).")
+    quickCheck testOrder
+
+    putStrLn("Testing exercise 4 (check for permutations).")
     quickCheck testPermlists
 
-    putStrLn("\nTest if we can correctly detect if a list is a derangement of another list:")
+    putStrLn("Testing exercise 5 (check for derangements).")
     print $ testDerangements 0 testLists
 
-    putStrLn("\nTest if the rot13 cipher is functioning properly with string input:")
+    putStrLn("Testing exercise 6 (The rot13 cipher).")
     putStrLn ((show testRot13) ++ " for general functioning.")
     putStrLn ((show testCapitalisation) ++ " for capitalisation.")
     putStrLn ((show testSpacing) ++ " for spacing.")
     putStrLn ((show testNumberSupport) ++ " for non-alphabetic support.")
 
-    -- TO
-    putStrLn("\nTest if generated IBANs are validated by the validateIBAN function:")
+    putStrLn("Testing exercise 7 (French IBANs).")
     printIOBool (testIBANvalidator 10)
-    putStrLn("\nDone!")
+    
+    putStrLn("Done testing!")
