@@ -100,7 +100,7 @@ funcList [] _ = []
 funcList (x:xs) n = (fst x, ((snd x) n)) : funcList xs n
 
 tuplesort :: [(String,Bool)]->[(String,Bool)]
-tuplesort xs = sortBy (comparing snd) xs
+tuplesort xs = sortBy (comparing snd) xs --need insert Data.Ord for this!!
 
 testOrder = \x -> (funcList (sortStringProp(propList)) x) == tuplesort (funcList (sortStringProp(propList)) x)
 
@@ -157,7 +157,7 @@ fixStr xs = rotate 4 ( filter (/= ' ') xs)
 
 convert2Int :: [Char]->[Char]
 convert2Int [] = []
-convert2Int (x:xs) = if (isLetter x) then (ord (toUpper x) - 55) ++ convert2Int xs
+convert2Int (x:xs) = if (isLetter x) then show(ord (toUpper x) - 55) ++ convert2Int xs 
                      else [x] ++ convert2Int xs
 
 
