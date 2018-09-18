@@ -47,7 +47,7 @@ triangle :: Integer -> Integer -> Integer -> Shape
 triangle a b c 
     | not (( a < b + c) && (b < c + a) && (a < c + b)) = NoTriangle
     | (a == b) && (b == c) = Equilateral
-    | ((a == b) && (a /= c)) || ((a == c) && (a /= b)) || ((b == c) && (b /= a)) = Isosceles
+    | ((a == b) && (a /= c)) || ((a == c) && (a /= b)) || ((b == c) && (b /= a)) = Isosceles -- not Equilateral
     | (a^2 + b^2 == c^2) || (b^2 + c^2 == a^2) || (a^2 + c^2 == b^2) = Rectangular
     | otherwise = Other
 
@@ -97,7 +97,7 @@ quickSortTest ((f,name):xs) = quickSortTest [(f1,n1) | (f1, n1) <- xs, stronger 
     ++ [name] ++ 
     quickSortTest [(f1,n1) | (f1, n1) <- xs, not (stronger [-10..10] f1 f)]
 
-strengthList = sortTest propertyList
+-- strengthList = sortTest propertyList
 
 
 
