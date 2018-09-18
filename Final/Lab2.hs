@@ -60,10 +60,9 @@ triangle a b c
     | otherwise = Other
 
 testNoTriangles1, testNoTriangles2, testNoTriangles3 :: Integer -> Integer -> Integer -> Bool
-testNoTriangles1 a b c = (a > 0 && b > 0 && c > 0 && a > b + c) --> triangle a b c == NoTriangle
-testNoTriangles2 a b c = (a > 0 && b > 0 && c > 0 && b > c + a) --> triangle a b c == NoTriangle
-testNoTriangles3 a b c = (a > 0 && b > 0 && c > 0 && c > a + b) --> triangle a b c == NoTriangle
-
+testNoTriangles1 a b c = (a > b + c) --> triangle a b c == NoTriangle
+testNoTriangles2 a b c = (b > c + a) --> triangle a b c == NoTriangle
+testNoTriangles3 a b c = (c > a + b) --> triangle a b c == NoTriangle
 
 -- THIS IS WRONG, CHECK WHY!
 testIsosceles1, testIsosceles2, testIsosceles3 :: Integer -> Integer -> Bool
