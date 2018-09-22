@@ -3,12 +3,18 @@ module Lab3 where
 import Data.List
 import System.Random
 import Test.QuickCheck
+import Test.QuickCheck.Monadic
 import Lecture3
+import System.Process
+import Control.Monad
 
 testTaut = Dsj [Prop 1, (Neg (Prop 1))]
 testContra = Cnj [Prop 1, (Neg (Prop 1))]
 testEntails = Prop 1
 testEquivalence = Prop 2
+
+randomNumber :: IO Int
+randomNumber = head <$> (replicateM 1 $ randomRIO (1,41))
 
 -- Exercise 1 ( 1 hour)
 contradiction, tautology :: Form -> Bool
@@ -61,9 +67,102 @@ testCompositionParser = ["*((2 ==> 3) -3)", "*(+(2 3) -3)", "(*(1 1) <=> -+(1 +(
 
 -- Exercise 3
 -- Data definitions of the literal, clause and conjunction.
-data L = Neg Form | Form
-data C = L | Dsj [C, L]
-data D = C | Cnj [D, C]
+-- data L = Neg Form | Form
+-- data C = L | Dsj [C, L]
+-- data D = C | Cnj [D, C]
 
+-- A precondition for the running of cnf is that it must be arrowfree as produced
+-- by the arrowfree function.
 cnf :: Form -> Form
-cnf ()
+cnf (Prop x) = Prop x
+cnf (Neg f) = Neg (cnf f)
+cnf (Dsj [Cnj fs]) = Neg (Cnj [Dsj (map cnf fs)])
+cnf (Cnj fs) =  Cnj (map cnf fs)
+cnf (Dsj fs) = Dsj (map cnf fs)
+
+-- randomFormGenerator :: Integer -> [Form]
+-- randomFormGenerator 0 = []
+-- randomFormGenerator n = generateForm : randomFormGenerator (n - 1)
+
+generateForm = do
+    randomNum <- randomNumber
+    print randomNum
+    let form = itemPicker randomNum
+    f <- form
+    print f
+    return form
+
+itemPicker :: Int -> IO [Char]
+itemPicker n
+    | n == 1 = do
+        return "1"
+    | n == 2 = do
+        return "2"
+    | n == 3 = do
+        return "3"
+    | n == 4 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        return ("-(" ++ (f1) ++ ")")
+    | n < 8 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        return ("+(" ++ (f1) ++ " " ++ (f2) ++ ")")
+    | n < 12 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f3 <- itemPicker randomNum
+        return ("+(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ ")")
+    | n < 16 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f3 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f4 <- itemPicker randomNum
+        return ("+(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ " " ++ (f4) ++ ")")
+    -- | n < 20 = do
+    --     randomNum <- randomNumber
+    --     f1 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f2 <- itemPicker randomNum
+    --     return ("*(" ++ (f1) ++ " " ++ (f2) ++ ")")
+    -- | n < 24 = do
+    --     randomNum <- randomNumber
+    --     f1 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f2 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f3 <- itemPicker randomNum
+    --     return ("*(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ ")")
+    -- | n < 28 = do
+    --     randomNum <- randomNumber
+    --     f1 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f2 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f3 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f4 <- itemPicker randomNum
+    --     return ("*(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ " " ++ (f4) ++ ")")
+    -- | n < 36 = do
+    --     randomNum <- randomNumber
+    --     f1 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f2 <- itemPicker randomNum
+    --     return ("(" ++ (f1) ++ " ==> " ++ (f2) ++ ")")
+    -- | n < 42 = do
+    --     randomNum <- randomNumber
+    --     f1 <- itemPicker randomNum
+    --     randomNum <- randomNumber
+    --     f2 <- itemPicker randomNum
+    --     return ("+(" ++ (f1) ++ " <=> " ++ (f2) ++ ")")
+    | otherwise = do
+        return "1"
