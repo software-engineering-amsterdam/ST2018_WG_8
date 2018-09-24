@@ -76,22 +76,37 @@ testCompositionParser = ["*((2 ==> 3) -3)", "*(+(2 3) -3)", "(*(1 1) <=> -+(1 +(
 cnf :: Form -> Form
 cnf (Prop x) = Prop x
 cnf (Neg f) = Neg (cnf f)
-cnf (Dsj [Cnj fs]) = Neg (Cnj [Dsj (map cnf fs)])
-cnf (Cnj fs) =  Cnj (map cnf fs)
+cnf (Cnj fs) = (Dsj (map cnf fs))
 cnf (Dsj fs) = Dsj (map cnf fs)
 
--- randomFormGenerator :: Integer -> [Form]
--- randomFormGenerator 0 = []
--- randomFormGenerator n = generateForm : randomFormGenerator (n - 1)
-
-generateForm = do
+-- This function uses the itemPicker to generate proper forms (longer that a single
+-- prop.) It checks if its a properly long form before returning, otherwise a new
+-- one is generated.
+generateLogic :: IO [Char]
+generateLogic = do
     randomNum <- randomNumber
-    print randomNum
     let form = itemPicker randomNum
     f <- form
-    print f
-    return form
+    if ((length f) > 10) && ((length f) < 50) then return f else generateLogic
 
+-- This function parses a generated random logic string into a [Form].
+-- It can thus be used also in checking the parser for a much larger variaty of
+-- strings.
+parseFormList :: IO [Form]
+parseFormList  = do
+    s <- generateLogic
+    let parsed = parse s
+    return parsed
+
+-- This function is the heart of the generator, it uses a random number to choose
+-- a form from among its options. Disjunctions and conjunctions are limited to
+-- 4 parts, negations, implications and equalities are generated with 1 and 2
+-- parts respectively. The parts in each dsj, cnj etc, are generated recursively.
+-- This means conjunctions can contain themselves or any other element etc.
+-- In order to make this work the amount of recursions called must never outweigh
+-- the amount of props generated (it will probably run forever if it gains momentum).
+-- Therefore the first 18 numbers generated are props, the other 10 are the
+-- rest of the possible forms.
 itemPicker :: Int -> IO [Char]
 itemPicker n
     | n <= 18 = do
