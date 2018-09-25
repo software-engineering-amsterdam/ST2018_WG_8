@@ -120,13 +120,18 @@ testNSamples n = do
     return (t && ts)
 
 {-
-
-
-
+    Exercise 3: The lecture notes of this week discuss the conversion of Boolean
+    formulas (formulas of propositional logic) into CNF form. The lecture notes also give
+    a definition of a Haskell datatype for formulas of propositional logic, using
+    lists for conjunctions and disjunctions. Your task is to write a Haskell
+    program for converting formulas into CNF.
+    Deliverables: conversion program with documentation, indication of time spent.
 -}
 
 -- A precondition for the running of cnf is that it must be arrowfree as produced
--- by the arrowfree function.
+-- by the arrowfree function. The function matches patters of logic and converts
+-- them going inward. Should be ran iteratively to convert it to the right
+-- form bit by bit (We did this with help of Pieter Donkers). 
 cnf :: Form -> Form
 cnf (Prop x) = Prop x
 cnf (Neg f) = Neg (cnf f)
