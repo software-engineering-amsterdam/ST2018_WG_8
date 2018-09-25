@@ -49,10 +49,6 @@ testFunc n f = do
     t <- f
     rest <- (testFunc (n - 1) f)
     return (t && rest)
--- testingContra :: IO Bool
--- testingContra = do
---     x <- generateForm
---     if (entails x) then return ((not (satisfiable x)) && (contradiction (nnf (arrowfree x)))) else return True
 
 -- A tautology should always be satisfiable and never a contradiction.
 testingTaut :: Form -> Bool
