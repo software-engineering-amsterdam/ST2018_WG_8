@@ -207,34 +207,23 @@ succeed x xs = [(x,xs)]
 
 parseForm :: Parser Token Form 
 parseForm (TokenInt x: tokens) = [(Prop x,tokens)]
-parseForm (TokenNeg : tokens) =
-  [ (Neg f, rest) | (f,rest) <- parseForm tokens ]
-parseForm (TokenCnj : TokenOP : tokens) = 
-  [ (Cnj fs, rest) | (fs,rest) <- parseForms tokens ]
-parseForm (TokenDsj : TokenOP : tokens) = 
-  [ (Dsj fs, rest) | (fs,rest) <- parseForms tokens ]
-parseForm (TokenOP : tokens) = 
-  [ (Impl f1 f2, rest) | (f1,ys) <- parseForm tokens,
-                         (f2,rest) <- parseImpl ys ]
-   ++
-  [ (Equiv f1 f2, rest) | (f1,ys) <- parseForm tokens,
-                          (f2,rest) <- parseEquiv ys ] 
+parseForm (TokenNeg : tokens) = [ (Neg f, rest) | (f,rest) <- parseForm tokens ]
+parseForm (TokenCnj : TokenOP : tokens) = [ (Cnj fs, rest) | (fs,rest) <- parseForms tokens ]
+parseForm (TokenDsj : TokenOP : tokens) = [ (Dsj fs, rest) | (fs,rest) <- parseForms tokens ]
+parseForm (TokenOP : tokens) = [ (Impl f1 f2, rest) | (f1,ys) <- parseForm tokens, (f2,rest) <- parseImpl ys ]
+   ++ [ (Equiv f1 f2, rest) | (f1,ys) <- parseForm tokens, (f2,rest) <- parseEquiv ys ] 
 parseForm tokens = []
 
 parseForms :: Parser Token [Form] 
 parseForms (TokenCP : tokens) = succeed [] tokens
-parseForms tokens = 
-   [(f:fs, rest) | (f,ys) <- parseForm tokens, 
-                   (fs,rest) <- parseForms ys ]
+parseForms tokens = [(f:fs, rest) | (f,ys) <- parseForm tokens, (fs,rest) <- parseForms ys ]
 
 parseImpl :: Parser Token Form
-parseImpl (TokenImpl : tokens) = 
-  [ (f,ys) | (f,y:ys) <- parseForm tokens, y == TokenCP ]
+parseImpl (TokenImpl : tokens) = [ (f,ys) | (f,y:ys) <- parseForm tokens, y == TokenCP ]
 parseImpl tokens = []
 
 parseEquiv :: Parser Token Form
-parseEquiv (TokenEquiv : tokens) = 
-  [ (f,ys) | (f,y:ys) <- parseForm tokens, y == TokenCP ]
+parseEquiv (TokenEquiv : tokens) = [ (f,ys) | (f,y:ys) <- parseForm tokens, y == TokenCP ]
 parseEquiv tokens = []
 
 parse :: String -> [Form]
@@ -245,10 +234,8 @@ arrowfree (Prop x) = Prop x
 arrowfree (Neg f) = Neg (arrowfree f)
 arrowfree (Cnj fs) = Cnj (map arrowfree fs)
 arrowfree (Dsj fs) = Dsj (map arrowfree fs)
-arrowfree (Impl f1 f2) = 
-  Dsj [Neg (arrowfree f1), arrowfree f2]
-arrowfree (Equiv f1 f2) = 
-  Dsj [Cnj [f1', f2'], Cnj [Neg f1', Neg f2']]
+arrowfree (Impl f1 f2) = Dsj [Neg (arrowfree f1), arrowfree f2]
+arrowfree (Equiv f1 f2) = Dsj [Cnj [f1', f2'], Cnj [Neg f1', Neg f2']]
   where f1' = arrowfree f1
         f2' = arrowfree f2
 
