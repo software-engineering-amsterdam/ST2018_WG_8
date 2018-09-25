@@ -14,7 +14,7 @@ testEntails = Prop 1
 testEquivalence = Prop 2
 
 randomNumber :: IO Int
-randomNumber = head <$> (replicateM 1 $ randomRIO (1,25))
+randomNumber = head <$> (replicateM 1 $ randomRIO (1,28))
 
 -- Exercise 1 ( 1 hour)
 contradiction, tautology :: Form -> Bool
@@ -30,8 +30,29 @@ equivalence f1 f2 = (entails f1 f2) && (entails f2 f1)
 -- Testing the definitions, first contradiction. Any satisfiable function
 -- should not be a contradiction, vice-versa: a contradiction can never be
 -- satisfiable.
-testingContra :: Form -> Bool
-testingContra = \f -> if (contradiction f) then not (satisfiable f) else True
+testContradiction :: IO Bool
+testContradiction = do
+    x <- generateForm
+    let editedX = (contradiction (nnf (arrowfree x)))
+    if (contradiction x) then return ((not (satisfiable x)) && editedX) else return (not editedX)
+
+testTautology :: IO Bool
+testTautology = do
+    x <- generateForm
+    let editedX = (tautology (nnf (arrowfree x)))
+    if (tautology x) then return ((satisfiable x) && editedX) else return (not editedX)
+
+testFunc :: Integer -> (IO Bool) -> IO Bool
+testFunc 0 f = do
+    return True
+testFunc n f = do
+    t <- f
+    rest <- (testFunc (n - 1) f)
+    return (t && rest)
+-- testingContra :: IO Bool
+-- testingContra = do
+--     x <- generateForm
+--     if (entails x) then return ((not (satisfiable x)) && (contradiction (nnf (arrowfree x)))) else return True
 
 -- A tautology should always be satisfiable and never a contradiction.
 testingTaut :: Form -> Bool
@@ -56,9 +77,8 @@ testingEntails f1 f2 = if (contradiction f1)
 -- Exercise 2
 -- Lets test if the parser accepts strings that should be accepted by
 -- entering a sequence of strings and checking if all correct items are properly parsed.
-testParser :: [String] -> Bool
-testParser [] = True
-testParser (x:xs) = length (filter (/= ' ') (show (parse x))) == (elementsIn x) && testParser xs
+testParser :: String -> Bool
+testParser x = length (filter (/= ' ') (show (parse x))) == (elementsIn x)
     where
         elementsIn s = 2 + length (filter (/= ' ') s)
 
@@ -76,13 +96,62 @@ testCompositionParser = ["*((2 ==> 3) -3)", "*(+(2 3) -3)", "(*(1 1) <=> -+(1 +(
 cnf :: Form -> Form
 cnf (Prop x) = Prop x
 cnf (Neg f) = Neg (cnf f)
-cnf (Cnj fs) = (Dsj (map cnf fs))
+cnf (Dsj [Cnj [x,y],z]) = Cnj [cnf (Dsj [z,x]), cnf (Dsj [z,y])]
+cnf (Cnj [z, Cnj [x, y]]) = Cnj [cnf (Dsj [z,x]), cnf (Dsj [z,y])]
+cnf (Cnj fs) = Dsj (map cnf fs)
 cnf (Dsj fs) = Dsj (map cnf fs)
 
+isCnf :: Form -> Bool
+isCnf (Prop x) = True
+isCnf (Neg (Prop x)) = True
+isCnf (Neg _) = False
+isCnf (Dsj xs) = not (any isCnj xs) && (all (==True) (map isCnf xs))
+isCnf (Cnj xs) = all (==True) (map isCnf xs)
+isCnf (Impl x y) = False
+isCnf (Equiv x y) = False
+
+-- Because appearantly we cant do list comprehension and do ==Cnj we add this fucntion.
+isCnj :: Form -> Bool
+isCnj (Cnj xs) = True
+isCnj _ = False
+
+
+checkInnerCnf :: Form -> Bool
+checkInnerCnf (Prop x) = True
+checkInnerCnf (Neg f) = checkInnerCnf f
+checkInnerCnf (Cnj fs) = all (== True) (map checkInnerCnf fs)
+checkInnerCnf (Dsj fs) = False
+
+containsCnj :: Form -> Bool
+containsCnj (Prop x) = True
+containsCnj (Neg f) = containsCnj f
+containsCnj (Dsj fs) = all (== True) (map containsCnj fs)
+containsCnj (Cnj fs) = False
+
+-- toCnf f = while (\x -> not (isCnf x)) (cnf f)
+cnff :: Form -> Form
+cnff frm = while (not . isCnf) cnf inp
+    where inp = toPairs (nnf (arrowfree frm))
+
+toPairs :: Form -> Form
+toPairs (Prop x) = Prop x
+toPairs (Neg x) = Neg (toPairs x)
+toPairs (Cnj (x:[])) = toPairs x
+toPairs (Cnj (x:xs))
+    | (length xs) > 1 = Cnj [toPairs x,toPairs(Cnj xs)]
+    | otherwise = Cnj (map toPairs (x:xs))
+toPairs (Dsj (x:[])) = toPairs x
+toPairs (Dsj (x:xs))
+    | (length xs) > 1 = Dsj [toPairs x,toPairs(Dsj xs)]
+    | otherwise = Dsj (map toPairs (x:xs))
+
+form4 = Dsj[Cnj [Prop 1, Prop 2]]
+
+form5 = Cnj[Dsj [Prop 1, Prop 2]]
 -- This function uses the itemPicker to generate proper forms (longer that a single
 -- prop.) It checks if its a properly long form before returning, otherwise a new
 -- one is generated.
-generateLogic :: IO [Char]
+generateLogic :: IO String
 generateLogic = do
     randomNum <- randomNumber
     let form = itemPicker randomNum
@@ -92,11 +161,11 @@ generateLogic = do
 -- This function parses a generated random logic string into a [Form].
 -- It can thus be used also in checking the parser for a much larger variaty of
 -- strings.
-parseFormList :: IO [Form]
-parseFormList  = do
+generateForm :: IO Form
+generateForm  = do
     s <- generateLogic
     let parsed = parse s
-    return parsed
+    return (head parsed)
 
 -- This function is the heart of the generator, it uses a random number to choose
 -- a form from among its options. Disjunctions and conjunctions are limited to
