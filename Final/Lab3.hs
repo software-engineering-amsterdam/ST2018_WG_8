@@ -171,15 +171,15 @@ toCnf f = while (not . isCnf) cnf f
 
 -- Finally lets test it. Run the function on a form and check if its equivalent
 -- to the original.
-checkCnf :: Integer -> IO Bool
-checkCnf 0 = do
+testCnf :: Integer -> IO Bool
+testCnf 0 = do
     return True
-checkCnf n = do
+testCnf n = do
     -- Adhere to preconditions
     f <- generateForm
     let f' = nnf (arrowfree (f))
     let fcnf = toCnf f'
-    fs <- checkCnf (n - 1)
+    fs <- testCnf (n - 1)
     return ((equivalence f fcnf) && fs)
 
 {-
@@ -324,8 +324,8 @@ cnf2cls (Neg (Prop p)) = [[-p]]
 cnf2cls (Cnj p) = map cnj2cls p
 cnf2cls (Dsj p) = map cnj2cls p
 
--- CNF can exist out of L, C or D (see NOTES). Transform each in their 
--- appropriate clause counterpart. 
+-- CNF can exist out of L, C or D (see NOTES). Transform each in their
+-- appropriate clause counterpart.
 cnj2cls :: Form -> Clause
 cnj2cls (Prop p) = [p]
 cnj2cls (Neg (Prop p)) = [-p]
@@ -338,7 +338,7 @@ cls2cnf p = Cnj $ map cls2cnj p
 cls2cnj :: Clause -> Form
 cls2cnj p = Dsj $ map (\p -> if p < 0 then Neg (Prop (-p)) else Prop p) p
 
--- Simple conjunctions & disjunctions for testing. 
+-- Simple conjunctions & disjunctions for testing.
 cnjP, cnjQ, dsjP, dsjQ, cnjR :: Form
 cnjP = Cnj [p, Neg p]
 cnjQ = Cnj [q, Neg q]
@@ -375,6 +375,10 @@ main = do
     r <- testNSamples n
     print r
 
+    putStrLn "Would test the CNF here if it would be able to split CNJ/DSJ in pairs, now it runs indefinetly."
+    -- r <- testCnf n
+    putStrLn "** NO TEST **"
+
     putStrLn "Testing bonus exercise on convertion:"
     print cnjP
     print (cnf2cls cnjP)
@@ -384,7 +388,7 @@ main = do
     print (cls2cnf cnfS)
 
     -- Did not have time to finish the testing on 5, just ran some simple tests.
-    -- Would have liked to have written a small function that would compare the original input 
+    -- Would have liked to have written a small function that would compare the original input
     -- to transform & reverse transform, and check if it would be the original input again.
-    
+
     return "Done"
