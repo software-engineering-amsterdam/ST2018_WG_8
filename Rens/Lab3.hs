@@ -8,11 +8,6 @@ import Lecture3
 import System.Process
 import Control.Monad
 
-testTaut = Dsj [Prop 1, (Neg (Prop 1))]
-testContra = Cnj [Prop 1, (Neg (Prop 1))]
-testEntails = Prop 1
-testEquivalence = Prop 2
-
 randomNumber :: IO Int
 randomNumber = head <$> (replicateM 1 $ randomRIO (1,28))
 
@@ -42,6 +37,31 @@ testTautology = do
     let editedX = (tautology (nnf (arrowfree x)))
     if (tautology x) then return ((satisfiable x) && editedX) else return (not editedX)
 
+testEquivalence :: IO Bool
+testEquivalence = do
+    x <- generateForm
+    let editedX = (nnf (arrowfree x))
+    return (equivalence x editedX)
+
+-- Entails always accept two instances of the same form (automatically tautologies) and
+-- all contradictions.The same form is valid due to the fact if a is true then a is also true.
+-- A set of tautologies should be accepted because if both are always true, entails holds.
+-- Finally, a contradiciton provides false in the first instance so the second one is not
+-- evaluated.
+testEntails :: IO Bool
+testEntails = do
+    f1 <- generateForm
+    f2 <- generateForm
+    if (contradiction f1)
+        then return (entails f1 f2)
+        else if (contradiction f2)
+            then return (entails f2 f1)
+            else if (tautology f1 && tautology f2) || f1 == f2
+                then return ((entails f1 f2) && (entails f2 f1))
+                else if (equivalence f1 f2)
+                    then return ((entails f1 f2))
+                    else return True
+
 testFunc :: Integer -> (IO Bool) -> IO Bool
 testFunc 0 f = do
     return True
@@ -49,26 +69,6 @@ testFunc n f = do
     t <- f
     rest <- (testFunc (n - 1) f)
     return (t && rest)
-
--- A tautology should always be satisfiable and never a contradiction.
-testingTaut :: Form -> Bool
-testingTaut = \f -> (tautology f) --> ((satisfiable f) && (not (contradiction f)))
-
--- Entails always accept two instances of the same form (automatically tautologies) and
--- all contradictions.The same form is valid due to the fact if a is true then a is also true.
--- A set of tautologies should be accepted because if both are always true, entails holds.
--- Finally, a contradiciton provides false in the first instance so the second one is not
--- evaluated.
-testingEntails :: Form -> Form -> Bool
-testingEntails f1 f2 = if (contradiction f1)
-    then (entails f1 f2)
-    else if (contradiction f2)
-        then (entails f2 f1)
-        else if (tautology f1 && tautology f2) || f1 == f2
-            then (entails f1 f2) && (entails f2 f1)
-            else if f1 == f2
-                then (entails f1 f2)
-                else True
 
 -- Exercise 2
 -- Lets test if the parser accepts strings that should be accepted by
