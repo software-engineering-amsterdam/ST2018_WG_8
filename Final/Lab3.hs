@@ -35,7 +35,6 @@ entails f g = tautology (Impl f g)
 equivalence :: Form -> Form -> Bool
 equivalence f g = tautology (Equiv f g)
 
-
 -- Testing below.
 testContradiction :: IO Bool
 testContradiction = do
@@ -90,7 +89,7 @@ testFunc n f = do
     return (t && rest)
 
 {- 
-    Test the parsing function. You can use any test method you want.
+    Exercise 2: Test the parsing function. You can use any test method you want.
     Deliverables: test report describing the test method used &&
     the outcome of the test, indication of time spent.
 -}
@@ -131,25 +130,6 @@ generateForm  = do
     s <- generateLogic
     let parsed = parse s
     return (head parsed)
-
-
-{-
-    Exercise 2:
--}
-
-
--- Exercise 2
--- Lets test if the parser accepts strings that should be accepted by
--- entering a sequence of strings and checking if all correct items are properly parsed.
-    testParser :: String -> Bool
-    testParser x = length (filter (/= ' ') (show (parse x))) == (elementsIn x)
-        where
-            elementsIn s = 2 + length (filter (/= ' ') s)
-    
-    testBasicsParser = ["(1 ==> 2)","(1 <=> 2)","+ (1 1)","-1","* (1 1)","1"]
-    testCompositionParser = ["*((2 ==> 3) -3)", "*(+(2 3) -3)", "(*(1 1) <=> -+(1 +(2 3)))"]
-    
-
 
 {- 
     This beauty is Rens' work and the heart of the generator.
