@@ -1,3 +1,16 @@
+module Lab3 where
+
+import Data.List
+import System.Random
+import Test.QuickCheck
+import Test.QuickCheck.Monadic
+import Lecture3
+import System.Process
+import Control.Monad
+
+randomNumber :: IO Int
+randomNumber = head <$> (replicateM 1 $ randomRIO (1,28))
+
 --  Ex 1
 
 tautology :: Form -> Bool
@@ -61,3 +74,104 @@ testFunc n f = do
     t <- f
     rest <- (testFunc (n - 1) f)
     return (t && rest)
+
+
+-- Ex 4
+-- This function uses the itemPicker to generate proper forms (longer that a single
+-- prop.) It checks if its a properly long form before returning, otherwise a new
+-- one is generated.
+generateLogic :: IO String
+generateLogic = do
+    randomNum <- randomNumber
+    let form = itemPicker randomNum
+    f <- form
+    if ((length f) > 10) && ((length f) < 50) then return f else generateLogic
+
+-- This function parses a generated random logic string into a [Form].
+-- It can thus be used also in checking the parser for a much larger variaty of
+-- strings.
+generateForm :: IO Form
+generateForm  = do
+    s <- generateLogic
+    let parsed = parse s
+    return (head parsed)
+
+-- This function is the heart of the generator, it uses a random number to choose
+-- a form from among its options. Disjunctions and conjunctions are limited to
+-- 4 parts, negations, implications and equalities are generated with 1 and 2
+-- parts respectively. The parts in each dsj, cnj etc, are generated recursively.
+-- This means conjunctions can contain themselves or any other element etc.
+-- In order to make this work the amount of recursions called must never outweigh
+-- the amount of props generated (it will probably run forever if it gains momentum).
+-- Therefore the first 18 numbers generated are props, the other 10 are the
+-- rest of the possible forms.
+itemPicker :: Int -> IO [Char]
+itemPicker n
+    | n <= 18 = do
+        return (show n)
+    | n <= 20 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        return ("-" ++ (f1) ++ "")
+    | n <= 21 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        return ("+(" ++ (f1) ++ " " ++ (f2) ++ ")")
+    | n <= 22 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f3 <- itemPicker randomNum
+        return ("+(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ ")")
+    | n <= 23 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f3 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f4 <- itemPicker randomNum
+        return ("+(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ " " ++ (f4) ++ ")")
+    | n <= 24 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        return ("*(" ++ (f1) ++ " " ++ (f2) ++ ")")
+    | n <= 25 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f3 <- itemPicker randomNum
+        return ("*(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ ")")
+    | n <= 26 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f3 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f4 <- itemPicker randomNum
+        return ("*(" ++ (f1) ++ " " ++ (f2) ++ " " ++ (f3) ++ " " ++ (f4) ++ ")")
+    | n <= 27 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        return ("(" ++ (f1) ++ " ==> " ++ (f2) ++ ")")
+    | n <= 28 = do
+        randomNum <- randomNumber
+        f1 <- itemPicker randomNum
+        randomNum <- randomNumber
+        f2 <- itemPicker randomNum
+        return ("(" ++ (f1) ++ " <=> " ++ (f2) ++ ")")
+    | otherwise = do
+        return "1"
