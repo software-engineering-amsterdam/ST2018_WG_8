@@ -64,49 +64,56 @@ exercise1 = do
 
 -- The parseForm should produce (Forms, []), if the grammar is correct.
 
-{-
-    Exercise 3: Write a Haskell program for converting Boolean formulas into CNF.
-    Deliverables: conversion program with documentation,
-    indication of time spent.
--}
-
--- Function to check if the current Form is CNF.
--- isCNF :: Form -> Boolean
--- isCNF (Prop p) = True 
--- isCNF (Neg p) = Neg (isCNF p)
-
 {- 
     Exercise 5 (bonus): Write a program for converting formulas to clause form.
-    You may assume that your formulas are already in CNF.
-
     Deliverables: Conversion program, test generator, test properties,
     documentation of the automated testing process.
     Also, give an indication of time spent.
 -}
 
 {- 
-    CNF: 
+    NOTES ::
     L = p | -p
     C = L | L v C
     D = C | C ^ D
     CNF: (p v -p) ^ (q v -q) ^ (r v -r)
 
-    Examples: 
+    EXAMPLES :: 
     [5, -6] == p5 v -p6
     [[4], [5, -6]] = p4 ^ (p5 V -p6)
 -}
 
--- Formula (CNF) to clause form. 
 type Clause  = [Int]
 type Clauses = [Clause]
 
--- Transform all elements of the form into [Int], concatenate into [Clause].
+-- Main function to transform all elements of Form into [Int],
+-- then create a list of it, resulting into [Clause].
 cnf2cls :: Form -> Clauses
-cnf2cls (Cnj ps) = [cnj2cls p | p <- ps]
+cnf2cls (Cnj ps) = [ cnj2cls p | p <- ps]
 
--- CNF can exist out of L, C and D (see above). Transform each in their 
+
+-- CNF can exist out of L, C or D (see NOTES). Transform each in their 
 -- appropriate clause counterpart. 
 cnj2cls :: Form -> Clause
 cnj2cls (Prop p) = [p]
-cnj2cls (Neg p) = [-p]
-cnj2cls (Dsj ps) = -- Do something.
+cnj2cls (Neg (Prop p)) = [-p]
+cnj2cls (Dsj ps) = [ dsj2cls p | p <- ps]
+
+dsj2cls :: Form -> Int
+dsj2cls (Prop p) = p
+dsj2cls (Neg (Prop p)) = -p
+
+exercise5 = do
+    putStrLn("Testing exercise 5.")
+    
+    print cnjP
+    print (cnf2cls cnjP)
+
+
+    print cnjQ
+    print (cnf2cls cnjQ)
+
+
+
+-- Basic testing for now, add automatic testing later.
+-- Simple conjunctions & disjunctions to test. 
