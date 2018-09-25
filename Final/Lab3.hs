@@ -256,31 +256,33 @@ type Clauses = [Clause]
 -- Main function to transform all elements of Form into [Int],
 -- then create a list of it, resulting into [Clause].
 cnf2cls :: Form -> Clauses
-cnf2cls (Cnj ps) = [ cnj2cls p | p <- ps]
+cnf2cls (Prop p) = [[p]]
+cnf2cls (Neg (Prop p)) = [[-p]]
+cnf2cls (Cnj p) = map cnj2cls p
+cnf2cls (Dsj p) = map cnj2cls p
 
-
--- CNF can exist out of L, C or D (see NOTES). Transform each in their
--- appropriate clause counterpart.
+-- CNF can exist out of L, C or D (see NOTES). Transform each in their 
+-- appropriate clause counterpart. 
 cnj2cls :: Form -> Clause
 cnj2cls (Prop p) = [p]
 cnj2cls (Neg (Prop p)) = [-p]
-cnj2cls (Dsj ps) = [ dsj2cls p | p <- ps]
+cnj2cls (Dsj ps) = concatMap cnj2cls ps
 
-dsj2cls :: Form -> Int
-dsj2cls (Prop p) = p
-dsj2cls (Neg (Prop p)) = -p
+-- Reverse functions, to create forms from the clauses.
+cls2cnf :: Clauses -> Form
+cls2cnf p = Cnj $ map cls2cnj p
 
-exercise5 = do
-    putStrLn("Testing exercise 5.")
+cls2cnj :: Clause -> Form
+cls2cnj p = Dsj $ map (\p -> if p < 0 then Neg (Prop (-p)) else Prop p) p
 
-    print cnjP
-    print (cnf2cls cnjP)
-
-
-    print cnjQ
-    print (cnf2cls cnjQ)
-
-
+-- Simple conjunctions & disjunctions for testing. 
+cnjP, cnjQ, dsjP, dsjQ, cnjR :: Form
+cnjP = Cnj [p, Neg p]
+cnjQ = Cnj [q, Neg q]
+dsjP = Dsj [p, Neg p]
+dsjQ = Dsj [q, Neg q]
+cnjR = Cnj [dsjP, dsjQ]
+cnfS = [[4], [5, -6]]
 
 -- Basic testing for now, add automatic testing later.
 -- Simple conjunctions & disjunctions to test.
@@ -310,6 +312,16 @@ main = do
     r <- testNSamples n
     print r
 
-    return "Done"
+    putStrLn "Testing bonus exercise on convertion:"
+    print cnjP
+    print (cnf2cls cnjP)
+    print cnjR
+    print (cnf2cls cnjR)
+    print cnfS
+    print (cls2cnf cnfS)
 
-{-
+    -- Did not have time to finish the testing on 5, just ran some simple tests.
+    -- Would have liked to have written a small function that would compare the original input 
+    -- to transform & reverse transform, and check if it would be the original input again.
+    
+    return "Done"
