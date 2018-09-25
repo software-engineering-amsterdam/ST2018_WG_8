@@ -11,13 +11,6 @@ import Test.QuickCheck.Monadic
 randomNumber :: IO Int
 randomNumber = head <$> (replicateM 1 $ randomRIO (1,28))
 
--- Simple conjunctions & disjunctions to test.
-cnjP, cnjQ, dsjP, dsjQ :: Form
-cnjP = Cnj [p, Neg p]
-cnjQ = Cnj [q, Neg q]
-dsjP = Dsj [p, Neg p]
-dsjQ = Dsj [q, Neg q]
-
 {-
     Exercise 1: Give definitions.
     Deliverables: implementation, description of your method
