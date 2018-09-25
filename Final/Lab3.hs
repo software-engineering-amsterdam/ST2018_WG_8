@@ -11,6 +11,13 @@ import Test.QuickCheck.Monadic
 randomNumber :: IO Int
 randomNumber = head <$> (replicateM 1 $ randomRIO (1,28))
 
+-- Simple conjunctions & disjunctions to test.
+cnjP, cnjQ, dsjP, dsjQ :: Form
+cnjP = Cnj [p, Neg p]
+cnjQ = Cnj [q, Neg q]
+dsjP = Dsj [p, Neg p]
+dsjQ = Dsj [q, Neg q]
+
 {-
     Exercise 1: Give definitions.
     Deliverables: implementation, description of your method
@@ -118,6 +125,62 @@ testNSamples n = do
     let t = testParser f
     ts <- testNSamples (n - 1)
     return (t && ts)
+
+{-
+
+
+
+-}
+
+-- A precondition for the running of cnf is that it must be arrowfree as produced
+-- by the arrowfree function.
+cnf :: Form -> Form
+cnf (Prop x) = Prop x
+cnf (Neg f) = Neg (cnf f)
+cnf (Dsj [Cnj [x,y],z]) = Cnj [cnf (Dsj [z,x]), cnf (Dsj [z,y])]
+cnf (Cnj [z, Cnj [x, y]]) = Cnj [cnf (Dsj [z,x]), cnf (Dsj [z,y])]
+cnf (Cnj fs) = Dsj (map cnf fs)
+cnf (Dsj fs) = Dsj (map cnf fs)
+
+-- isCnf is used in converting to cnf as a form must be checked over and over
+-- untill it is cnf, if not it has to be rerun (as this runs inward it can take
+-- a long time for long forms).
+isCnf :: Form -> Bool
+isCnf (Prop x) = True
+isCnf (Neg (Prop x)) = True
+isCnf (Neg _) = False
+isCnf (Dsj xs) = (not (any innerCnj xs)) && (all (== True) (map innerCnj xs))
+isCnf (Cnj xs) = all (== True) (map innerCnj xs)
+
+-- Simple function that checks if an element is a conjucntion.
+innerCnj :: Form -> Bool
+innerCnj (Cnj xs) = True
+innerCnj _ = False
+
+{-
+    This only works for forms with 2 part conjunctions or disjunctions unfortunately.
+    Pieter Donkers explained a way to turn it into subpairs but we were not able
+    to properly convert it within the time we had. This could be mitigated by running
+    the generator with a max of 2 cnj/dsj's. Requires input that is arrowfree and nnf.
+    However, the nnf, arrowfree and cnf functions might produce longer than 3
+    parts which means this function usually runs forever...
+-}
+
+toCnf :: Form -> Form
+toCnf f = while (not . isCnf) cnf f
+
+-- Finally lets test it. Run the function on a form and check if its equivalent
+-- to the original.
+checkCnf :: Integer -> IO Bool
+checkCnf 0 = do
+    return True
+checkCnf n = do
+    -- Adhere to preconditions
+    f <- generateForm
+    let f' = nnf (arrowfree (f))
+    let fcnf = toCnf f'
+    fs <- checkCnf (n - 1)
+    return ((equivalence f fcnf) && fs)
 
 {-
     Exercise 4: Write a formula generator for random testing of properties of propositional logic.
@@ -311,5 +374,3 @@ main = do
     print r
 
     return "Done"
-
-{-

@@ -97,53 +97,31 @@ cnf (Cnj [z, Cnj [x, y]]) = Cnj [cnf (Dsj [z,x]), cnf (Dsj [z,y])]
 cnf (Cnj fs) = Dsj (map cnf fs)
 cnf (Dsj fs) = Dsj (map cnf fs)
 
+-- isCnf is used in converting to cnf as a form must be checked over and over
+-- untill it is cnf, if not it has to be rerun (as this runs inward it can take
+-- a long time for long forms).
 isCnf :: Form -> Bool
 isCnf (Prop x) = True
 isCnf (Neg (Prop x)) = True
 isCnf (Neg _) = False
-isCnf (Dsj xs) = not (any isCnj xs) && (all (==True) (map isCnf xs))
-isCnf (Cnj xs) = all (==True) (map isCnf xs)
-isCnf (Impl x y) = False
-isCnf (Equiv x y) = False
+isCnf (Dsj xs) = ((not . any) innerCnj xs) && (all (== True) (map innerCnj xs))
+isCnf (Cnj xs) = all (== True) (map innerCnj xs)
 
--- Because appearantly we cant do list comprehension and do ==Cnj we add this fucntion.
-isCnj :: Form -> Bool
-isCnj (Cnj xs) = True
-isCnj _ = False
+-- Simple function that checks if an element is a conjucntion.
+innerCnj :: Form -> Bool
+innerCnj (Cnj xs) = True
+innerCnj _ = False
 
+{-
+    This only works for forms with 2 part conjunctions or disjunctions unfortunately.
+    Pieter Donkers explained a way to turn it into subpairs but we were not able
+    to properly convert it within the time we had. This can be mitigated by running
+    the generator with a max of 2 cnj/dsj's.
+-}
 
-checkInnerCnf :: Form -> Bool
-checkInnerCnf (Prop x) = True
-checkInnerCnf (Neg f) = checkInnerCnf f
-checkInnerCnf (Cnj fs) = all (== True) (map checkInnerCnf fs)
-checkInnerCnf (Dsj fs) = False
+toCnf :: Form -> Form
+toCnf f = while (\x -> not (isCnf x)) (cnf f)
 
-containsCnj :: Form -> Bool
-containsCnj (Prop x) = True
-containsCnj (Neg f) = containsCnj f
-containsCnj (Dsj fs) = all (== True) (map containsCnj fs)
-containsCnj (Cnj fs) = False
-
--- toCnf f = while (\x -> not (isCnf x)) (cnf f)
-cnff :: Form -> Form
-cnff frm = while (not . isCnf) cnf inp
-    where inp = toPairs (nnf (arrowfree frm))
-
-toPairs :: Form -> Form
-toPairs (Prop x) = Prop x
-toPairs (Neg x) = Neg (toPairs x)
-toPairs (Cnj (x:[])) = toPairs x
-toPairs (Cnj (x:xs))
-    | (length xs) > 1 = Cnj [toPairs x,toPairs(Cnj xs)]
-    | otherwise = Cnj (map toPairs (x:xs))
-toPairs (Dsj (x:[])) = toPairs x
-toPairs (Dsj (x:xs))
-    | (length xs) > 1 = Dsj [toPairs x,toPairs(Dsj xs)]
-    | otherwise = Dsj (map toPairs (x:xs))
-
-form4 = Dsj[Cnj [Prop 1, Prop 2]]
-
-form5 = Cnj[Dsj [Prop 1, Prop 2]]
 -- This function uses the itemPicker to generate proper forms (longer that a single
 -- prop.) It checks if its a properly long form before returning, otherwise a new
 -- one is generated.
