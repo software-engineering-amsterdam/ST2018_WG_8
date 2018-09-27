@@ -63,12 +63,12 @@ import Test.QuickCheck
 
 type Rel a = [(a,a)]
 
-sortRel :: Ord a => Rel a -> Rel a
+{-sortRel :: Ord a => Rel a -> Rel a
 sortRel [] = []
 sortRel (x:xs) = 
     sortRel[a|a<-xs, (fst a) <= (fst x)] --for every a (a=Rel a) in xs, if a(fst) is < than x(head) then make it the head of the list
     ++[(fst x, snd x)]
-    ++sortRel[a|a<-xs, (fst a) > (fst x)]
+    ++sortRel[a|a<-xs, (fst a) > (fst x)]-}
 
 
 sym :: Ord a => Rel a->Rel a
@@ -77,7 +77,7 @@ sym (x:xs) = x:(snd x, fst x):sym xs
 
 symClos :: Ord a =>Rel a->Rel a
 symClos [] = []
-symClos xs = sym (sortRel xs)
+symClos xs = sort (sym ( xs))
 
 {-
     Exercise 6:
@@ -98,9 +98,8 @@ symClos xs = sym (sortRel xs)
     [(1,2),(1,3),(1,4),(2,3),(2,4),(3,4)].
     (Deliverable: Haskell program, indication of time spent.)
 -}
----6
---Time
-{-while :: (a -> Bool) -> (a -> a) -> a -> a
+
+while :: (a -> Bool) -> (a -> a) -> a -> a
 while = until . (not.)
 
 
@@ -108,12 +107,23 @@ infixr 5 @@
 (@@) :: Eq a => Rel a -> Rel a -> Rel a
 r @@ s = nub [ (x,z) | (x,y) <- r, (w,z) <- s, y == w ]
 
-tr :: Ord a => Rel a -> Rel a 
-tr [] = []
-tr (x:y:xs) = while if ( snd x == fst y) then -}
+--rel @@ rel gives us the new tuples that we need to add to our relation
+--unionRel creates a new relation which is the union of our first relation and the tuples that we need to add to it
+unionRel rel = nub (rel ++ (rel @@ rel)) 
 
 
-trClos :: Ord a => Rel a -> Rel a
+fp :: Eq a => (a -> a) -> a -> a
+fp f = until (\ x -> x == f x) f
+
+--when we cannot add more tuples to our list we should stop.
+--This means that the input relation == output relation
+--so this is our stop condition. We used the function fp from the lecture.
+trClos ::Ord a=>Eq a => Rel a -> Rel a
+trClos [] = []
+trClos rel = sort (fp unionRel rel)
+
+
+
 
 {-
     Exercise 7:
