@@ -1,8 +1,9 @@
 module Lab4 where
 
 import Control.Monad
-import Data.List
 import Data.Char
+import Data.List
+import Data.Tuple
 import Lecture4
 import SetOrd
 import System.Process
@@ -62,7 +63,7 @@ symClos xs = sort( nub( addSym xs))
 -- Adds all symmetrical counterparts of the tuples in the relation.
 addSym :: Ord a => Rel a -> Rel a
 addSym  [] = []
-addSym ((a,b) : xs) = (a, b) : (b, a) : addSym xs
+addSym (x : xs) = x : swap x : addSym xs
 
 {-
     Exercise 6: Define a function that gives the transitive closure of a relation,
@@ -92,6 +93,22 @@ addTrans xs = sort( nub( xs ++ (xs @@ xs)))
     Define reasonable properties to test. Can you use QuickCheck? How?
     (Deliverables: test code, short test report, indication of time spent.)
 -}
+
+checkSym :: Eq a => Rel a -> Bool
+checkSym [] = True
+checkSym (x : xs) = 
+    if (swap x `elem` (x : xs)) == False
+    then False
+    else checkSym(delete (swap x) xs)  
+
+-- Quickcheck: Create list of tuples of Relations
+createPairs :: Eq a => (a, a) -> Rel a -> Rel a
+createPairs x xs = filter (\(a,_) -> a == snd x) xs
+
+checkTrans :: Eq a => Rel a -> Bool
+checkTrans [] = True
+checkTrans xs = [ ]
+    where yrz = createPairs x xs
 
 {-
     Exercise 8:
