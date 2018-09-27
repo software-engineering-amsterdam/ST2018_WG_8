@@ -58,7 +58,26 @@ import Test.QuickCheck
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
-symClos :: Ord a => Rel a -> Rel a
+--Time : 10 minutes
+--if the relation is not ordered we need to order it/ i couldnt understand if it is or not!! Ask
+
+type Rel a = [(a,a)]
+
+sortRel :: Ord a => Rel a -> Rel a
+sortRel [] = []
+sortRel (x:xs) = 
+    sortRel[a|a<-xs, (fst a) <= (fst x)] --for every a (a=Rel a) in xs, if a(fst) is < than x(head) then make it the head of the list
+    ++[(fst x, snd x)]
+    ++sortRel[a|a<-xs, (fst a) > (fst x)]
+
+
+sym :: Ord a => Rel a->Rel a
+sym [] = []
+sym (x:xs) = x:(snd x, fst x):sym xs
+
+symClos :: Ord a =>Rel a->Rel a
+symClos [] = []
+symClos xs = sym (sortRel xs)
 
 {-
     Exercise 6:
@@ -79,6 +98,20 @@ symClos :: Ord a => Rel a -> Rel a
     [(1,2),(1,3),(1,4),(2,3),(2,4),(3,4)].
     (Deliverable: Haskell program, indication of time spent.)
 -}
+---6
+--Time
+{-while :: (a -> Bool) -> (a -> a) -> a -> a
+while = until . (not.)
+
+
+infixr 5 @@
+(@@) :: Eq a => Rel a -> Rel a -> Rel a
+r @@ s = nub [ (x,z) | (x,y) <- r, (w,z) <- s, y == w ]
+
+tr :: Ord a => Rel a -> Rel a 
+tr [] = []
+tr (x:y:xs) = while if ( snd x == fst y) then -}
+
 
 trClos :: Ord a => Rel a -> Rel a
 
