@@ -7,7 +7,17 @@ import SetOrd
 import System.Process
 import System.Random
 import Test.QuickCheck
+import Control.Monad
 
+-- Generates a random int.
+randomNumber :: IO Int
+randomNumber = randomRIO (0,100)
+
+-- Generates a random list of ints within a range [-n..n] and of x length.
+randomNumberList :: Int -> Int -> IO [Int]
+randomNumberList n x = replicateM x $ randomRIO (-n,n)
+
+setLength (Set xs) = length xs
 
 {-
     Exercise 1:
@@ -17,12 +27,42 @@ import Test.QuickCheck
 -}
 
 {-
-    Exercise 2:
+    Exercise 2 (1 hour):
     Implement a random data generator for the datatype Set Int, where Set is as
     defined in SetOrd.hs. First do this from scratch, next give a version that
     uses QuickCheck to random test this datatype.
     (Deliverables: two random test generators, indication of time spent.)
 -}
+
+-- This generator from scratch gets 2 numbers as range and size of the set,
+-- then it generates a list and feeds it to the Set generator.
+scratchGen :: IO (Set Int)
+scratchGen = do
+    range <- randomNumber
+    size <- randomNumber
+    list <- randomNumberList range size
+    let list' = nub list
+    return (Set (sort list'))
+
+-- The second generator is really simple but took me longer as the notation
+-- was new to me, a generator for arbitrary is defined to generate lists.
+setGen = arbitrary :: Gen ([Int])
+
+generateSet :: Gen (Set Int)
+generateSet = do
+    list <- setGen
+    let list' = nub list
+    return (Set (sort list'))
+
+instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
+    arbitrary = do
+        t <- arbitrary
+        let t' = sort(nub(t))
+        return (Set t)
+
+-- Before either lists are turned to sets, duplicates are removed and the list is
+-- sorted.
+
 
 {-
     Exercise 3:
@@ -34,6 +74,30 @@ import Test.QuickCheck
     indication of time spent.)
 -}
 
+intersectionSet :: Ord a => Set a -> Set a -> Set a
+intersectionSet (Set xs) set2 = Set ([x | x <- xs, inSet x set2])
+
+differenceSet :: Ord a => Set a -> Set a -> Set a
+differenceSet (Set xs) (Set ys) = Set (sort((xs \\ ys) ++ (ys \\ xs)))
+
+unionSet' :: (Ord a) => Set a -> Set a -> Set a
+unionSet' (Set xs) (Set ys) = Set (sort (nub (xs ++ ys)))
+
+
+-- Intersection tests that each element of the list is in both result lists.
+-- In other words the intersection should be a subset of both lists.
+-- Furthermore, the function should not remove excess items, therefore the same
+-- list should not loose any items.
+testIntersectionSet :: Ord a => Set a -> Set a -> Bool
+testIntersectionSet set1 set2 =
+    if set1 == set2
+        then setLength (intersectionSet set1 set2) == setLength set1
+        else crossCheckEls set1 set2
+
+crossCheckEls :: Ord a => Set a -> Set a -> Bool
+crossCheckEls set1 set2 = subSet setIntersection set1 && subSet setIntersection set2
+    where
+        setIntersection = intersectionSet set1 set2
 {-
     Exercise 4:
     Read or reread Chapter 5 of The Haskell Road, and make a list of questions
@@ -58,7 +122,7 @@ import Test.QuickCheck
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
-symClos :: Ord a => Rel a -> Rel a
+-- symClos :: Ord a => Rel a -> Rel a
 
 {-
     Exercise 6:
@@ -80,7 +144,7 @@ symClos :: Ord a => Rel a -> Rel a
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
-trClos :: Ord a => Rel a -> Rel a
+-- trClos :: Ord a => Rel a -> Rel a
 
 {-
     Exercise 7:
