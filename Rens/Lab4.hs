@@ -54,6 +54,7 @@ generateSet = do
     let list' = nub list
     return (Set (sort list'))
 
+-- Use an instance to create a set to be used in QuickCheck.
 instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
     arbitrary = do
         t <- arbitrary
@@ -98,6 +99,8 @@ crossCheckEls :: Ord a => Set a -> Set a -> Bool
 crossCheckEls set1 set2 = subSet setIntersection set1 && subSet setIntersection set2
     where
         setIntersection = intersectionSet set1 set2
+
+
 {-
     Exercise 4:
     Read or reread Chapter 5 of The Haskell Road, and make a list of questions
