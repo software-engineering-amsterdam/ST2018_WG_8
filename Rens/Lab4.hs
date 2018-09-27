@@ -7,6 +7,7 @@ import SetOrd
 import System.Process
 import System.Random
 import Test.QuickCheck
+import Lecture4
 import Control.Monad
 
 -- Generates a random int.
@@ -167,7 +168,13 @@ crossCheckAllEls (Set xs) (Set ys) =
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
--- symClos :: Ord a => Rel a -> Rel a
+type Rel a = [(a,a)]
+
+-- Generates a list of tuples and their inverse to make in symmetrical, then
+-- sorts that lits and removes any duplicates.
+symClos :: Ord a => Rel a -> Rel a
+symClos [] = []
+symClos (x:xs) = sort( nub((snd x, fst x) : x : symClos xs))
 
 {-
     Exercise 6:
@@ -189,7 +196,20 @@ crossCheckAllEls (Set xs) (Set ys) =
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
--- trClos :: Ord a => Rel a -> Rel a
+infixr 5 @@
+
+(@@) :: Eq a => Rel a -> Rel a -> Rel a
+r @@ s =
+    nub [ (x,z) | (x,y) <- r, (w,z) <- s, y == w ]
+
+-- Use the fixed point function with the findTr function to keep adding transitions
+-- untill no new ones can be made.
+trClos :: Ord a => Rel a -> Rel a
+trClos xs = fp findTr xs
+
+-- Applies the function for making transitions (@@)
+findTr :: Ord a => Rel a -> Rel a
+findTr xs = sort(nub( (xs @@ xs) ++ xs))
 
 {-
     Exercise 7:
@@ -208,6 +228,11 @@ crossCheckAllEls (Set xs) (Set ys) =
     argument, if you think these are different you should give an example that
     illustrates the difference.)
 -}
+
+testSymTrEquality (Set xs) (Set ys) = trClos (symClos (zippedSet)) == symClos (trClos (zippedSet))
+    where
+        zippedSet = zip xs ys
+
 
 {-
     Bonus:
