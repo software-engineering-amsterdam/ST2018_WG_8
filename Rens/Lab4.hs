@@ -55,14 +55,14 @@ generateSet = do
     return (Set (sort list'))
 
 -- Use an instance to create a set to be used in QuickCheck.
+-- Before lists are turned to sets, duplicates are removed and the list is
+-- sorted.
 instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
     arbitrary = do
         t <- arbitrary
         let t' = sort(nub(t))
-        return (Set t)
+        return (Set t')
 
--- Before either lists are turned to sets, duplicates are removed and the list is
--- sorted.
 
 
 {-
@@ -84,11 +84,15 @@ differenceSet (Set xs) (Set ys) = Set (sort((xs \\ ys) ++ (ys \\ xs)))
 unionSet' :: (Ord a) => Set a -> Set a -> Set a
 unionSet' (Set xs) (Set ys) = Set (sort (nub (xs ++ ys)))
 
+{-
+    Test 1:
 
--- Intersection tests that each element of the list is in both result lists.
--- In other words the intersection should be a subset of both lists.
--- Furthermore, the function should not remove excess items, therefore the same
--- list should not loose any items.
+    Intersection tests that each element of the list is in both result lists.
+    In other words the intersection should be a subset of both lists.
+    Furthermore, the function should not remove excess items, therefore the same
+    list should not loose any items.
+-}
+
 testIntersectionSet :: Ord a => Set a -> Set a -> Bool
 testIntersectionSet set1 set2 =
     if set1 == set2
@@ -100,6 +104,44 @@ crossCheckEls set1 set2 = subSet setIntersection set1 && subSet setIntersection 
     where
         setIntersection = intersectionSet set1 set2
 
+{-
+    Test 2:
+
+    The difference should test that each element of the diff list is present in
+    only one of the composition lists. Secondly, the diff of a list on itsself should
+    be the empty list.
+-}
+
+testDifferenceSet :: Ord a => Set a -> Set a -> Bool
+testDifferenceSet set1 set2 =
+    differenceSet set1 set1 == emptySet && crossCheckUniqueEls set1 set2 setDifference
+    where
+        setDifference = differenceSet set1 set2
+
+-- Check that the elements from the difference list appears in one list, not two.
+crossCheckUniqueEls :: Ord a => Set a -> Set a -> Set a -> Bool
+crossCheckUniqueEls set1 set2 (Set xs) = length([x | x <- xs, (inSet x set1) && (inSet x set2)]) == 0
+
+{-
+    Test 3:
+
+    unionSet' luckily has a reference function provided in SetOrd (unionSet)
+    Nevertheless, I will check that each element of each composition list is in
+    the resulting union list.
+-}
+
+testUnionSet' :: Ord a => Set a -> Set a -> Bool
+testUnionSet' (Set xs) (Set ys) = (setUnion == setUnion') && crossCheckAllEls (Set xs) (Set ys)
+    where
+        setUnion' = unionSet' (Set xs) (Set ys)
+        setUnion = unionSet (Set xs) (Set ys)
+
+crossCheckAllEls :: Ord a => Set a -> Set a -> Bool
+crossCheckAllEls (Set xs) (Set ys) =
+    xs == [x | x <- xs, inSet x setUnion'] &&
+    ys == [y | y <- ys, inSet y setUnion']
+    where
+        setUnion' = unionSet' (Set xs) (Set ys)
 
 {-
     Exercise 4:
