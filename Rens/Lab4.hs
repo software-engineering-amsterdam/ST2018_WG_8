@@ -229,10 +229,17 @@ findTr xs = sort(nub( (xs @@ xs) ++ xs))
     illustrates the difference.)
 -}
 
+-- Tests if symmetry and transitivity is equal for certain sets.
 testSymTrEquality (Set xs) (Set ys) = trClos (symClos (zippedSet)) == symClos (trClos (zippedSet))
     where
         zippedSet = zip xs ys
 
+-- Example that proves difference:
+-- This generates a zippedSet of (1,2) which has a symmetry of [(1,2),(2,1)]
+-- which in turn has a transitivity of [(1,1),(1,2),(2,1),(2,2)]
+-- The inverse of this (first tr then sym produces) [(1,2)] and subsequently
+-- [(1,2),(2,1)]. So they are inequal as proved by the underneath function.
+setInEquality = testSymTrEquality (Set [1]) (Set [2])
 
 {-
     Bonus:
@@ -243,3 +250,26 @@ testSymTrEquality (Set xs) (Set ys) = trClos (symClos (zippedSet)) == symClos (t
     to test your implementations.
     (Deliverable: implementation, QuickCheck properties, test report.)
 -}
+
+instance Show Statement where
+    show (Ass v e) = v ++ " := " ++ show e ++ "\n"
+    show (Cond c s s') = "if " ++ show c ++ " then" ++ show s ++ " else "++ show s'
+    show (Seq []) = ""
+    show (Seq (x:xs)) = show x ++ show (Seq xs)
+    show (While c s) = "while " ++ show c ++ " do {\n" ++ show s ++ "}"
+
+instance Show Expr where
+    show (I i) = show i
+    show (V v) = v
+    show (Add e e') = "(" ++ show e ++ " + " ++ show e' ++ ")"
+    show (Subtr e e') = "(" ++ show e ++ " - " ++ show e' ++ ")"
+    show (Mult e e') = "(" ++ show e ++ " * " ++ show e' ++ ")"
+
+instance Show Condition where
+    show (Prp v) = v
+    show (Eq e e') = show e ++ " == " ++ show e'
+    show (Lt e e') = show e ++ " < " ++ show e'
+    show (Gt e e') = show e ++ " > " ++ show e'
+    show (Ng c) = "-" ++ show c
+    show (Cj (x:xs)) = show x ++ " && " ++ show xs
+    show (Dj (x:xs)) = show x ++ " || " ++ show xs
