@@ -77,8 +77,7 @@ sym (x:xs) = x:(snd x, fst x):sym xs
 
 symClos :: Ord a =>Rel a->Rel a
 symClos [] = []
-symClos xs = sort (sym ( xs))
-
+symClos xs = sort (nub (sym ( xs)))
 {-
     Exercise 6:
     Use the datatype for relations from the previous exercise, plus
