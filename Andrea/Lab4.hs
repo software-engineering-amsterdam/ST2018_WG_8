@@ -55,9 +55,11 @@ import Test.QuickCheck
 
 type Rel a = [(a,a)]
 
+-- Remove all duplicates & sort the tuples of the relation.
 symClos :: Ord a => Rel a -> Rel a
 symClos xs = sort( nub( addSym xs))
 
+-- Adds all symmetrical counterparts of the tuples in the relation.
 addSym :: Ord a => Rel a -> Rel a
 addSym  [] = []
 addSym ((a,b) : xs) = (a, b) : (b, a) : addSym xs
@@ -71,19 +73,21 @@ addSym ((a,b) : xs) = (a, b) : (b, a) : addSym xs
 -}
 
 infixr 5 @@
-    
+
+-- Given functione.
 (@@) :: Eq a => Rel a -> Rel a -> Rel a
 r @@ s = nub [ (x,z) | (x,y) <- r, (w,z) <- s, y == w ]
 
+-- Create new transitions of the relation until no new relations are found.
 trClos :: Ord a => Rel a -> Rel a
 trClos xs = fp addTrans xs
 
+-- Create the next transition of the current relation.
 addTrans :: Ord a => Rel a -> Rel a
 addTrans xs = sort( nub( xs ++ (xs @@ xs)))
 
 {-
-    Exercise 7:
-    Test the functions symClos and trClos from the previous exercises.
+    Exercise 7: Test the functions symClos and trClos from the previous exercises.
     Devise your own test method for this. Try to use random test generation.
     Define reasonable properties to test. Can you use QuickCheck? How?
     (Deliverables: test code, short test report, indication of time spent.)
