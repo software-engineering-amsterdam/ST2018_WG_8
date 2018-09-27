@@ -133,6 +133,15 @@ trClos rel = sort (fp unionRel rel)
     (Deliverables: test code, short test report, indication of time spent.)
 -}
 
+createList ::Eq a=> Rel a -> Rel a
+createList [] = []
+createList (x:xs)= [a|a<-xs, (snd x)==(fst a)]
+
+testTr ::Eq a => Rel a -> Bool
+testTr [] = True
+testTr (x:xs) = length([a|a<-(createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 && testTr xs
+
+
 {-
     Exercise 8:
     Is there a difference between the symmetric closure of the transitive
