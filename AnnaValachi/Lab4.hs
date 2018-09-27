@@ -63,12 +63,12 @@ import Test.QuickCheck
 
 type Rel a = [(a,a)]
 
-sortRel :: Ord a => Rel a -> Rel a
+{-sortRel :: Ord a => Rel a -> Rel a
 sortRel [] = []
 sortRel (x:xs) = 
     sortRel[a|a<-xs, (fst a) <= (fst x)] --for every a (a=Rel a) in xs, if a(fst) is < than x(head) then make it the head of the list
     ++[(fst x, snd x)]
-    ++sortRel[a|a<-xs, (fst a) > (fst x)]
+    ++sortRel[a|a<-xs, (fst a) > (fst x)]-}
 
 
 sym :: Ord a => Rel a->Rel a
@@ -77,7 +77,7 @@ sym (x:xs) = x:(snd x, fst x):sym xs
 
 symClos :: Ord a =>Rel a->Rel a
 symClos [] = []
-symClos xs = sym (sortRel xs)
+symClos xs = sort (sym ( xs))
 
 {-
     Exercise 6:
@@ -100,7 +100,7 @@ symClos xs = sym (sortRel xs)
 -}
 ---6
 --Time
-{-while :: (a -> Bool) -> (a -> a) -> a -> a
+while :: (a -> Bool) -> (a -> a) -> a -> a
 while = until . (not.)
 
 
@@ -108,12 +108,32 @@ infixr 5 @@
 (@@) :: Eq a => Rel a -> Rel a -> Rel a
 r @@ s = nub [ (x,z) | (x,y) <- r, (w,z) <- s, y == w ]
 
-tr :: Ord a => Rel a -> Rel a 
+
+unionRel rel = nub (rel ++ (rel @@ rel)) 
+
+fp :: Eq a => (a -> a) -> a -> a
+fp f = until (\ x -> x == f x) f
+
+trClos ::Ord a=>Eq a => Rel a -> Rel a
+trClos [] = []
+trClos rel = sort (fp unionRel rel)
+
+
+{-tr ::Eq a=> Rel a -> Rel a
 tr [] = []
-tr (x:y:xs) = while if ( snd x == fst y) then -}
+tr rel = mergeFunc rel -}
+
+{-mergeFunc :: Rel a -> Rel a
+mergeFunc [] = []
+mergeFunc rel = 
+    until (\n -> (take n (unionRel rel) == (take n-1 (unionRel rel)))) unionRel rel-} 
+
+{-iterateFix :: Eq a => (Rel a ->Rel a) -> Rel a -> Rel a
+iterateFix tr = apprx (iterate tr) where
+apprx (x:y:zs) = if x == y then [x] else x: apprx (y:zs)-}
 
 
-trClos :: Ord a => Rel a -> Rel a
+
 
 {-
     Exercise 7:
