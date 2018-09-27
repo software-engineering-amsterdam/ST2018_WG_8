@@ -18,10 +18,6 @@ import Test.QuickCheck
     (Deliverables: list of questions, indication of time spent.)
 -}
 
--- instance (Arbitrary Set) Int where
--- arbitrary = 
-
-
 {-
     Exercise 2:
     Implement a random data generator for the datatype Set Int, where Set is as
@@ -30,15 +26,30 @@ import Test.QuickCheck
     (Deliverables: two random test generators, indication of time spent.)
 -}
 
+instance (Arbitrary Set) Int where
+    arbitrary = 
+
 {-
-    Exercise 3:
-    Implement operations for set intersection, set union and set difference,
-    for the datatype Set defined in SetOrd.hs. Next, use automated testing
-    to check that your implementation is correct. First use your own generator,
-    next use QuickCheck.
+    Exercise 3: Implement operations for set intersection, set union and set difference.
+    Next, use automated testing to check that your implementation is correct.
+    First use your own generator, next use QuickCheck.
     (Deliverables: implementations, test properties, short test report,
     indication of time spent.)
 -}
+
+-- intersection of a set : doorsnede, what is in both sets?
+setIntersection :: Ord a => Set a -> Set a -> Set a
+setIntersection (Set [])     set2  = 
+setIntersection (Set (x:xs)) set2  = 
+
+-- union of a set : vereniging, the total of both sets?
+setUnion :: Ord a => Set a -> Set a -> Set a
+setUnion a b = unionSet a b 
+
+-- difference of a set: A - B
+setDifference :: Ord a => Set a -> Set a -> Set a
+setDifference (Set [])     set2  =  set2
+setDifference (Set (x:xs)) set2  =
 
 {-
     Exercise 4:
@@ -102,13 +113,14 @@ checkSym (x : xs) =
     else checkSym(delete (swap x) xs)  
 
 -- Quickcheck: Create list of tuples of Relations
+
+-- Given a Relation xRy, create a list of all relations in that list that correspond with yRz.
 createPairs :: Eq a => (a, a) -> Rel a -> Rel a
-createPairs x xs = filter (\(a,_) -> a == snd x) xs
+createPairs xRy xs = filter (\(y,_) -> y == snd xRy) xs
 
 checkTrans :: Eq a => Rel a -> Bool
-checkTrans [] = True
-checkTrans xs = [ ]
-    where yrz = createPairs x xs
+checkTrans xs = all (== True) [ (x,z) `elem` xs | (x,y) <- xs, (_,z) <- (createPairs (x,y) xs)]
+-- STILL NEEDS TO CHECK IF THERE ARE ELEMS IN TRANS THAT SHOULD NOT BE THERE 
 
 {-
     Exercise 8:
