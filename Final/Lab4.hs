@@ -223,6 +223,21 @@ testingSym n = do
     let x = testSym sample
     return (x && rest)
 
+--Tr Test
+-- createList is a list with all the relations that have as first element, the second element of the head of the list xs
+createList ::Eq a=> Rel a -> Rel a
+createList [] = []
+createList (x:xs)= [a | a <- xs, (snd x)==(fst a) ]
+
+--our test is not working. we check if all the elements that should be in the transitive closure are there but 
+--we do not check properly if something is in our closure while
+--it shoudn't be there
+testTr ::Eq a => Rel a -> Bool
+testTr [] = True
+testTr (x:xs) = length( [a | a <- (createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 &&  testTr xs
+
+testTr' xs = testTr (trClos xs)
+
 {-
     Exercise 8: Is there a difference between the symmetric closure of the transitive
     closure of a relation R and the transitive closure of the symmetric
