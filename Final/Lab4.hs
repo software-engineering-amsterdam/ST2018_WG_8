@@ -17,6 +17,7 @@ import Control.Monad
     (Deliverables: list of questions, indication of time spent.)
 
     - Andrea found the Russell Paradox  difficult.
+    - Anna found example 4.25 difficult
 -}
 
 {-
