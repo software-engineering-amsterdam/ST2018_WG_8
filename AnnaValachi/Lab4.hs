@@ -8,7 +8,15 @@ import System.Process
 import System.Random
 import Test.QuickCheck
 
+-- Generates a random int.
+randomNumber :: IO Int
+randomNumber = randomRIO (0,100)
 
+-- Generates a random list of ints within a range [-n..n] and of x length.
+randomNumberList :: Int -> Int -> IO [Int]
+randomNumberList n x = replicateM x $ randomRIO (-n,n)
+
+setLength (Set xs) = length xs
 {-
     Exercise 1:
     Read or reread Chapter 4 of The Haskell Road, and make a list of questions
@@ -24,6 +32,36 @@ import Test.QuickCheck
     uses QuickCheck to random test this datatype.
     (Deliverables: two random test generators, indication of time spent.)
 -}
+
+-- This generator from scratch gets 2 numbers as range and size of the set,
+-- then it generates a list and feeds it to the Set generator.
+scratchGen :: IO (Set Int)
+scratchGen = do
+    range <- randomNumber
+    size <- randomNumber
+    list <- randomNumberList range size
+    let list' = nub list
+    return (Set (sort list'))
+
+-- The second generator is really simple but took me longer as the notation
+-- was new to me, a generator for arbitrary is defined to generate lists.
+setGen = arbitrary :: Gen ([Int])
+
+generateSet :: Gen (Set Int)
+generateSet = do
+    list <- setGen
+    let list' = nub list
+    return (Set (sort list'))
+
+-- Use an instance to create a set to be used in QuickCheck.
+instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
+    arbitrary = do
+        t <- arbitrary
+        let t' = sort(nub(t))
+        return (Set t)
+
+-- Before either lists are turned to sets, duplicates are removed and the list is
+-- sorted.
 
 
 {-
@@ -53,6 +91,21 @@ difference (Set a) (Set b) = Set ([x|x<-a, not(x `elem` b) ])
 --myTestDidderence :: Eq a=> Set a -> Set a -> Bool
 --myTestDidderence a b = length [x|x <- diff , inSet x a, not(inSet x b)]==0
     --where diff = difference a b
+
+-- Intersection tests that each element of the list is in both result lists.
+-- In other words the intersection should be a subset of both lists.
+-- Furthermore, the function should not remove excess items, therefore the same
+-- list should not loose any items.
+{-testIntersectionSet :: Ord a => Set a -> Set a -> Bool
+testIntersectionSet set1 set2 =
+    if set1 == set2
+        then setLength (intersectionSet set1 set2) == setLength set1
+        else crossCheckEls set1 set2
+
+crossCheckEls :: Ord a => Set a -> Set a -> Bool
+crossCheckEls set1 set2 = subSet setIntersection set1 && subSet setIntersection set2
+    where
+        setIntersection = intersectionSet set1 set2-}
 
 
 {-
@@ -149,7 +202,7 @@ testSym xs = length([a|a<- xs, not ((snd a,fst a) `elem` xs)]) == 0
 --Tr Test
 createList ::Eq a=> Rel a -> Rel a
 createList [] = []
-createList (x:xs)= [a|a<-xs, (snd x)==(fst a)]
+createList (x:xs)= [a | a<-xs, (snd x)==(fst a) ]
 
 testTr ::Eq a => Rel a -> Bool
 testTr [] = True
