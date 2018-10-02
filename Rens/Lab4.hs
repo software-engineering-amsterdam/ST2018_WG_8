@@ -3,6 +3,7 @@ module Lab4 where
 import Control.Monad
 import Data.List
 import Data.Char
+import Data.Tuple
 import SetOrd
 import System.Process
 import System.Random
@@ -63,8 +64,6 @@ instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
         t <- arbitrary
         let t' = sort(nub(t))
         return (Set t')
-
-
 
 {-
     Exercise 3:
@@ -174,7 +173,7 @@ type Rel a = [(a,a)]
 -- sorts that lits and removes any duplicates.
 symClos :: Ord a => Rel a -> Rel a
 symClos [] = []
-symClos (x:xs) = sort( nub((snd x, fst x) : x : symClos xs))
+symClos (x:xs) = sort( nub( swap x : x : symClos xs))
 
 {-
     Exercise 6:
@@ -219,6 +218,21 @@ findTr xs = sort(nub( (xs @@ xs) ++ xs))
     (Deliverables: test code, short test report, indication of time spent.)
 -}
 
+-- [(1,2),(2,3)]
+-- [(1,2),(2,3),(1,3),(2,2),(4,3)]
+-- filterUniques xs = not . any ([(x, y) | (x, y) <- xs, ((length(filter ( == (_, x)) xs) > 1) || (length(filter ( == (_, x)) xs) > 1))])
+
+-- createList ::Eq a=> Rel a -> Rel a
+-- createList [] = []
+-- createList (x:xs) = [a | a <- xs, (snd x) == (fst a)]
+--
+-- testTr :: Eq a => Rel a -> Bool
+-- testTr [] = True
+-- testTr (x:xs) ys = length([a | a <- (createList (x:xs)), not ((fst x,snd a) `elem` (x:xs)), not (length(createList (x:xs)) == 0)]) == 0 && testTr xs
+
+testTr' :: Ord a => Rel a -> Rel a
+testTr' xs = (trClos xs) \\ xs
+
 {-
     Exercise 8:
     Is there a difference between the symmetric closure of the transitive
@@ -233,12 +247,13 @@ findTr xs = sort(nub( (xs @@ xs) ++ xs))
 testSymTrEquality (Set xs) (Set ys) = trClos (symClos (zippedSet)) == symClos (trClos (zippedSet))
     where
         zippedSet = zip xs ys
-
--- Example that proves difference:
--- This generates a zippedSet of (1,2) which has a symmetry of [(1,2),(2,1)]
--- which in turn has a transitivity of [(1,1),(1,2),(2,1),(2,2)]
--- The inverse of this (first tr then sym produces) [(1,2)] and subsequently
--- [(1,2),(2,1)]. So they are inequal as proved by the underneath function.
+{-
+    Example that proves difference:
+    This generates a zippedSet of (1,2) which has a symmetry of [(1,2),(2,1)]
+    which in turn has a transitivity of [(1,1),(1,2),(2,1),(2,2)]
+    The inverse of this (first tr then sym produces) [(1,2)] and subsequently
+    [(1,2),(2,1)]. So they are inequal as proved by the underneath function.
+-}
 setInEquality = testSymTrEquality (Set [1]) (Set [2])
 
 {-
