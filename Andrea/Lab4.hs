@@ -12,13 +12,17 @@ import Test.QuickCheck
 
 
 {-
-    Exercise 1:
-    Read or reread Chapter 4 of The Haskell Road, and make a list of questions
+    Exercise 1: Read or reread Chapter 4 of The Haskell Road, and make a list of questions
     on specific points that cause difficulty of understanding.
     (Deliverables: list of questions, indication of time spent.)
+    
+    Russel Paradox (p. 131)
+    +- 1 hour.
 -}
 
 {-
+
+    TO DO!! 
     Exercise 2:
     Implement a random data generator for the datatype Set Int, where Set is as
     defined in SetOrd.hs. First do this from scratch, next give a version that
@@ -30,6 +34,8 @@ instance (Arbitrary Set) Int where
     arbitrary = 
 
 {-
+
+    TO DO!! 
     Exercise 3: Implement operations for set intersection, set union and set difference.
     Next, use automated testing to check that your implementation is correct.
     First use your own generator, next use QuickCheck.
@@ -52,10 +58,12 @@ setDifference (Set [])     set2  =  set2
 setDifference (Set (x:xs)) set2  =
 
 {-
-    Exercise 4:
-    Read or reread Chapter 5 of The Haskell Road, and make a list of questions
+    Exercise 4: Read or reread Chapter 5 of The Haskell Road, and make a list of questions
     on specific points that cause difficulty of understanding.
     (Deliverables: list of questions, indication of time spent.)
+    - reflexive transitive closure
+    Time spent: +- 40 minutes.
+
 -}
 
 {-
@@ -123,6 +131,8 @@ checkTrans xs = all (== True) [ (x,z) `elem` xs | (x,y) <- xs, (_,z) <- (createP
 -- STILL NEEDS TO CHECK IF THERE ARE ELEMS IN TRANS THAT SHOULD NOT BE THERE 
 
 {-
+    TO DO!! 
+
     Exercise 8:
     Is there a difference between the symmetric closure of the transitive
     closure of a relation R and the transitive closure of the symmetric
