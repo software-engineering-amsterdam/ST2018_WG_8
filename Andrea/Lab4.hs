@@ -30,12 +30,12 @@ import Test.QuickCheck
     (Deliverables: two random test generators, indication of time spent.)
 -}
 
-instance (Arbitrary Set) Int where
-    arbitrary = 
+instance Arbitrary (Set a)  where
+    arbitrary = do
+        set <- arbitrary
+        return Set (nub (sort ( set)))
 
 {-
-
-    TO DO!! 
     Exercise 3: Implement operations for set intersection, set union and set difference.
     Next, use automated testing to check that your implementation is correct.
     First use your own generator, next use QuickCheck.
@@ -45,17 +45,21 @@ instance (Arbitrary Set) Int where
 
 -- intersection of a set : doorsnede, what is in both sets?
 setIntersection :: Ord a => Set a -> Set a -> Set a
-setIntersection (Set [])     set2  = 
-setIntersection (Set (x:xs)) set2  = 
+-- setIntersection (Set [])     set2  = []
+setIntersection (Set (xs)) set2  = Set ([x | x <- xs, inSet x set2])
 
 -- union of a set : vereniging, the total of both sets?
 setUnion :: Ord a => Set a -> Set a -> Set a
 setUnion a b = unionSet a b 
 
 -- difference of a set: A - B
+-- The \\ function is list difference ((non-associative). In the result of xs \\ ys, the first occurrence of each 
+-- element of ys in turn (if any) has been removed from xs
 setDifference :: Ord a => Set a -> Set a -> Set a
 setDifference (Set [])     set2  =  set2
-setDifference (Set (x:xs)) set2  =
+setDifference (Set (xs)) (Set (ys))  = Set (sort (xs \\ ys) ++ (ys \\ xs))
+
+-- CREATE TESTS!! Or just use Rens' :)
 
 {-
     Exercise 4: Read or reread Chapter 5 of The Haskell Road, and make a list of questions
@@ -140,6 +144,9 @@ checkTrans xs = all (== True) [ (x,z) `elem` xs | (x,y) <- xs, (_,z) <- (createP
     (Deliverable: If your answer is that these are the same, you should give an
     argument, if you think these are different you should give an example that
     illustrates the difference.)
+
+    Yes they are the same. They are associative. 
+    https://proofwiki.org/wiki/Transitive_Closure_of_Symmetric_Relation_is_Symmetric
 -}
 
 {-
