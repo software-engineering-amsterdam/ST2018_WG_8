@@ -92,22 +92,6 @@ difference (Set a) (Set b) = Set ( [x | x<-a, not (x `elem` b) ])
 --myTestDidderence a b = length [x|x <- diff , inSet x a, not(inSet x b)]==0
 --where diff = difference a b
 
--- Intersection tests that each element of the list is in both result lists.
--- In other words the intersection should be a subset of both lists.
--- Furthermore, the function should not remove excess items, therefore the same
--- list should not loose any items.
-{-testIntersectionSet :: Ord a => Set a -> Set a -> Bool
-testIntersectionSet set1 set2 =
-    if set1 == set2
-        then setLength (intersectionSet set1 set2) == setLength set1
-        else crossCheckEls set1 set2
-
-crossCheckEls :: Ord a => Set a -> Set a -> Bool
-crossCheckEls set1 set2 = subSet setIntersection set1 && subSet setIntersection set2
-    where
-        setIntersection = intersectionSet set1 set2-}
-
-
 {-
     Exercise 4:
     Read or reread Chapter 5 of The Haskell Road, and make a list of questions
