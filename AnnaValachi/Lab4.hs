@@ -8,15 +8,6 @@ import System.Process
 import System.Random
 import Test.QuickCheck
 
--- Generates a random int.
-randomNumber :: IO Int
-randomNumber = randomRIO (0,100)
-
--- Generates a random list of ints within a range [-n..n] and of x length.
-randomNumberList :: Int -> Int -> IO [Int]
-randomNumberList n x = replicateM x $ randomRIO (-n,n)
-
-setLength (Set xs) = length xs
 {-
     Exercise 1:
     Read or reread Chapter 4 of The Haskell Road, and make a list of questions
@@ -33,35 +24,6 @@ setLength (Set xs) = length xs
     (Deliverables: two random test generators, indication of time spent.)
 -}
 
--- This generator from scratch gets 2 numbers as range and size of the set,
--- then it generates a list and feeds it to the Set generator.
-scratchGen :: IO (Set Int)
-scratchGen = do
-    range <- randomNumber
-    size <- randomNumber
-    list <- randomNumberList range size
-    let list' = nub list
-    return (Set (sort list'))
-
--- The second generator is really simple but took me longer as the notation
--- was new to me, a generator for arbitrary is defined to generate lists.
-setGen = arbitrary :: Gen ([Int])
-
-generateSet :: Gen (Set Int)
-generateSet = do
-    list <- setGen
-    let list' = nub list
-    return (Set (sort list'))
-
--- Use an instance to create a set to be used in QuickCheck.
-instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
-    arbitrary = do
-        t <- arbitrary
-        let t' = sort(nub(t))
-        return (Set t)
-
--- Before either lists are turned to sets, duplicates are removed and the list is
--- sorted.
 
 
 {-
@@ -76,14 +38,14 @@ instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
 
 
 intersection ::Ord a=> Set a -> Set a -> Set a
-intersection (Set a) (Set b) =  Set ([x|x<-a, inSet x (Set b)])
+intersection (Set a) (Set b) =  Set ( [x | x<-a, inSet x (Set b)])
 
 myunion :: Ord a => Set a -> Set a -> Set a
 myunion (Set []) (Set b) = Set b
 myunion (Set a) (Set b) = Set (nub (sort (a ++ b)))
 
 difference :: Eq a=> Set a -> Set a -> Set a
-difference (Set a) (Set b) = Set ([x|x<-a, not(x `elem` b) ])
+difference (Set a) (Set b) = Set ( [x| x<-a, not(x `elem` b) ])
 
 --myIntersectionTest :: Eq a=> Set a -> Set a -> Bool
 --myIntersectionTest a b =  length ([x|x<- intersection (Set a) (Set b), not(x `elem` a)||not(x `elem` b)])==0
@@ -206,7 +168,7 @@ createList (x:xs)= [a | a<-xs, (snd x)==(fst a) ]
 
 testTr ::Eq a => Rel a -> Bool
 testTr [] = True
-testTr (x:xs) = length([a|a<-(createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 &&  testTr xs
+testTr (x:xs) = length( [a| a<- (createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 &&  testTr xs
 
 
 {-
