@@ -21,12 +21,6 @@ import Control.Monad
 -}
 
 {-
-    Exercise 2: Implement a random data generator for the datatype Set Int.
-    First do this from scratch, then with QuickCheck to random test this datatype.
-    (Deliverables: two random test generators, indication of time spent.)
--}
-
-{-
     Exercise 2 (1 hour):
     Implement a random data generator for the datatype Set Int, where Set is as
     defined in SetOrd.hs. First do this from scratch, next give a version that
@@ -72,7 +66,7 @@ instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
         return (Set t')
 
 {-
-    Exercise 3: Implement operations for set intersection, set union and set difference.
+    Exercise 3 (2 hours): Implement operations for set intersection, set union and set difference.
     Next, use automated testing to check that your implementation is correct.
     First use your own generator, next use QuickCheck.
     (Deliverables: implementations, test properties, short test report,
@@ -154,9 +148,10 @@ crossCheckAllEls (Set xs) (Set ys) =
     Exercise 4: Read or reread Chapter 5.
     (Deliverables: list of questions, indication of time spent.)
 -}
+-- No questions
 
 {-
-    Exercise 5: Implement a function symClos.
+    Exercise 5 (30 minutes): Implement a function symClos.
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
@@ -169,7 +164,7 @@ symClos [] = []
 symClos (x:xs) = sort( nub( swap x : x : symClos xs))
 
 {-
-    Exercise 6: Define a function trClos.
+    Exercise 6 (1.5 hours): Define a function trClos.
     (Deliverable: Haskell program, indication of time spent.)
 -}
 
@@ -189,7 +184,7 @@ findTr :: Ord a => Rel a -> Rel a
 findTr xs = sort(nub( (xs @@ xs) ++ xs))
 
 {-
-    Exercise 7: Test the functions symClos and trClos from the previous exercises.
+    Exercise 7 (4 hours): Test the functions symClos and trClos from the previous exercises.
     Devise your own test method for this. Try to use random test generation.
     Define reasonable properties to test. Can you use QuickCheck? How?
     (Deliverables: test code, short test report, indication of time spent.)
@@ -214,6 +209,7 @@ testSym xs = length([a | a <- xs', not ((snd a, fst a) `elem` xs')]) == 0
     where
         xs' = symClos xs
 
+-- Runs the testing function for n lists.
 testingSym :: Int -> IO Bool
 testingSym 0 = do
     return True
@@ -223,23 +219,32 @@ testingSym n = do
     let x = testSym sample
     return (x && rest)
 
---Tr Test
--- createList is a list with all the relations that have as first element, the second element of the head of the list xs
-createList ::Eq a=> Rel a -> Rel a
+-- Tests for trClos
+-- Generates a list with all relations that have the a transitive relation to
+-- the head element of the list.
+createList :: Eq a=> Rel a -> Rel a
 createList [] = []
-createList (x:xs)= [a | a <- xs, (snd x)==(fst a) ]
-
---our test is not working. we check if all the elements that should be in the transitive closure are there but 
---we do not check properly if something is in our closure while
---it shoudn't be there
-testTr ::Eq a => Rel a -> Bool
-testTr [] = True
-testTr (x:xs) = length( [a | a <- (createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 &&  testTr xs
-
-testTr' xs = testTr (trClos xs)
+createList (x:xs) = [a | a <- xs, (snd x) == (fst a) ]
 
 {-
-    Exercise 8: Is there a difference between the symmetric closure of the transitive
+    Our test is not complete. We check if transitiveness is correct but we are
+    unable to check if the trClos function does not generate any additional elements.
+    The odd case would be that [(1,2),(2,3)] would produce [(1,2),(2,3),(1,3)] but
+    [(1,2),(2,3),(1,3),(4,5)] would also be transitive. This goes for some more
+    properties that we were unable to properly define in our test. We are now checking
+    that the input is a proper transitive.
+-}
+
+testTr :: Ord a => Rel a -> Rel a -> Bool
+testTr [] _ = True
+testTr (x:xs) ys = length( [a | a <- (createList (x:xs)), not ((fst x,snd a) `elem` ys)]) == 0 &&  testTr xs ys
+
+-- Converts the input list to a proper trClos by function.
+testTr' :: Ord a => Rel a -> Bool
+testTr' xs = testTr (trClos xs) (trClos xs)
+
+{-
+    Exercise 8 (1 hour): Is there a difference between the symmetric closure of the transitive
     closure of a relation R and the transitive closure of the symmetric
     closure of R?
 
@@ -264,7 +269,7 @@ testSymTrEquality (Set xs) (Set ys) = trClos (symClos (zippedSet)) == symClos (t
 setInEquality = testSymTrEquality (Set [1]) (Set [2])
 
 {-
-    Bonus:
+    Bonus (1 hour):
     In the lecture notes, Statement is in class Show, but the show function
     for it is a bit clumsy. Write your own show function for imperative programs.
     Next, write a read function, and use show and read to state some abstract
@@ -297,14 +302,16 @@ instance Show Condition where
     show (Dj (x:xs)) = show x ++ " || " ++ show xs
 
 
--- testinFunc :: Ord a => IO()
--- testinFunc = (quickCheck testIntersectionSet)
-
 main :: IO ()
 main = do
     putStrLn("Exercise 2")
     putStrLn("Showing scratch generator:")
-    putStrLn("Showing Arbitrary generator:")
+    r <- scratchGen
+    print(r)
+
+    putStrLn("Showing Arbitrary generator (needed sorting and nub, is not the same as the quickCheck Arbitrary instance):")
+    r <- (generate setGen)
+    print (sort(nub(r)))
 
     putStrLn("Exercise 3")
 
@@ -322,9 +329,12 @@ main = do
     result <- (testingSym 100)
     print(result)
 
+    putStrLn("Testing transitive property with 100 tests:")
+    quickCheck (testTr' :: Rel Int -> Bool)
+
     putStrLn("Exercise 8")
     putStrLn("We generate a zipped set of (1,2) which has a symmetry of [(1,2),(2,1)] which in turn has a transitivity of [(1,1),(1,2),(2,1),(2,2)] The inverse of this (first transitive then symmetry) produces [(1,2)] and subsequently [(1,2),(2,1)]. So they are inequal as shown by the output of testSymTrEquality.")
     print (setInEquality)
 
-    putStrLn("Bonus, we only have a show class for this:")
+    putStrLn("Bonus, we only have a show class:")
     print(fib)
