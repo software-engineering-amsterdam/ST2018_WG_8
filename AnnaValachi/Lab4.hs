@@ -15,6 +15,7 @@ import Test.QuickCheck
     on specific points that cause difficulty of understanding.
     (Deliverables: list of questions, indication of time spent.)
 -}
+--ex 4.25
 
 {-
     Exercise 2:
@@ -23,6 +24,7 @@ import Test.QuickCheck
     uses QuickCheck to random test this datatype.
     (Deliverables: two random test generators, indication of time spent.)
 -}
+
 
 {-
     Exercise 3:
@@ -33,6 +35,25 @@ import Test.QuickCheck
     (Deliverables: implementations, test properties, short test report,
     indication of time spent.)
 -}
+
+
+intersection ::Ord a=> Set a -> Set a -> Set a
+intersection (Set a) (Set b) =  Set ([x|x<-a, inSet x (Set b)])
+
+myunion :: Ord a => Set a -> Set a -> Set a
+myunion (Set []) (Set b) = Set b
+myunion (Set a) (Set b) = Set (nub (sort (a ++ b)))
+
+difference :: Eq a=> Set a -> Set a -> Set a
+difference (Set a) (Set b) = Set ([x|x<-a, not(x `elem` b) ])
+
+--myIntersectionTest :: Eq a=> Set a -> Set a -> Bool
+--myIntersectionTest a b =  length ([x|x<- intersection (Set a) (Set b), not(x `elem` a)||not(x `elem` b)])==0
+
+--myTestDidderence :: Eq a=> Set a -> Set a -> Bool
+--myTestDidderence a b = length [x|x <- diff , inSet x a, not(inSet x b)]==0
+    --where diff = difference a b
+
 
 {-
     Exercise 4:
@@ -63,14 +84,6 @@ import Test.QuickCheck
 
 type Rel a = [(a,a)]
 
-{-sortRel :: Ord a => Rel a -> Rel a
-sortRel [] = []
-sortRel (x:xs) = 
-    sortRel[a|a<-xs, (fst a) <= (fst x)] --for every a (a=Rel a) in xs, if a(fst) is < than x(head) then make it the head of the list
-    ++[(fst x, snd x)]
-    ++sortRel[a|a<-xs, (fst a) > (fst x)]-}
-
-
 sym :: Ord a => Rel a->Rel a
 sym [] = []
 sym (x:xs) = x:(snd x, fst x):sym xs
@@ -78,6 +91,7 @@ sym (x:xs) = x:(snd x, fst x):sym xs
 symClos :: Ord a =>Rel a->Rel a
 symClos [] = []
 symClos xs = sort (nub (sym ( xs)))
+
 {-
     Exercise 6:
     Use the datatype for relations from the previous exercise, plus
@@ -97,9 +111,6 @@ symClos xs = sort (nub (sym ( xs)))
     [(1,2),(1,3),(1,4),(2,3),(2,4),(3,4)].
     (Deliverable: Haskell program, indication of time spent.)
 -}
-
-while :: (a -> Bool) -> (a -> a) -> a -> a
-while = until . (not.)
 
 
 infixr 5 @@
@@ -123,7 +134,6 @@ trClos rel = sort (fp unionRel rel)
 
 
 
-
 {-
     Exercise 7:
     Test the functions symClos and trClos from the previous exercises.
@@ -131,14 +141,19 @@ trClos rel = sort (fp unionRel rel)
     Define reasonable properties to test. Can you use QuickCheck? How?
     (Deliverables: test code, short test report, indication of time spent.)
 -}
+--SymTest
+testSym :: Eq a=>Rel a -> Bool
+testSym [] = True
+testSym xs = length([a|a<- xs, not ((snd a,fst a) `elem` xs)]) == 0
 
+--Tr Test
 createList ::Eq a=> Rel a -> Rel a
 createList [] = []
 createList (x:xs)= [a|a<-xs, (snd x)==(fst a)]
 
 testTr ::Eq a => Rel a -> Bool
 testTr [] = True
-testTr (x:xs) = length([a|a<-(createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 && testTr xs
+testTr (x:xs) = length([a|a<-(createList (x:xs)), not ((fst x,snd a) `elem` (x:xs))]) == 0 &&  testTr xs
 
 
 {-
