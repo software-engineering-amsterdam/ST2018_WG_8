@@ -74,6 +74,8 @@ instance (Arbitrary a, Ord a) => Arbitrary (Set a) where
     indication of time spent.)
 -}
 
+set2list (Set xs) = xs
+
 
 intersection ::Ord a=> Set a -> Set a -> Set a
 intersection (Set a) (Set b) =  Set ( [x | x<-a, inSet x (Set b)])
@@ -85,12 +87,14 @@ myunion (Set a) (Set b) = Set (nub (sort (a ++ b)))
 difference :: Eq a=> Set a -> Set a -> Set a
 difference (Set a) (Set b) = Set ( [x | x<-a, not (x `elem` b) ])
 
---myIntersectionTest :: Eq a=> Set a -> Set a -> Bool
---myIntersectionTest a b =  length ([x|x<- intersection (Set a) (Set b), not(x `elem` a)||not(x `elem` b)])==0
+myIntersectionTest :: Ord a=> Set a -> Set a -> Bool
+myIntersectionTest a b =  length ([x |x<- set2list (intersection a b), not(inSet x a)||not(inSet x b)])==0
 
---myTestDidderence :: Eq a=> Set a -> Set a -> Bool
---myTestDidderence a b = length [x|x <- diff , inSet x a, not(inSet x b)]==0
---where diff = difference a b
+myTestDifference :: Ord a=> Set a -> Set a -> Bool
+myTestDifference a b = length [x|x <- set2list (diff) , inSet x a, not(inSet x b)]==0
+    where diff = difference a b
+
+
 
 {-
     Exercise 4:
