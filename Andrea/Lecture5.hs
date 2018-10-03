@@ -113,6 +113,9 @@ consistent s = and $
                 ++
                [ subgridInjective s (r,c) | 
                     r <- [1,4,7], c <- [1,4,7]]
+                ++
+               [ nrcInjective s (r,c) |
+                    r <- [2, 6], c <- [2, 6]]
 
 extend :: Sudoku -> ((Row,Column),Value) -> Sudoku
 extend = update

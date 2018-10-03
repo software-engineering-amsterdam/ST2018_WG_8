@@ -1,21 +1,72 @@
+module Lab5
+    where
+
+import Data.List
+import Lecture5
+import System.Random
+
 {-
-    Exercise 1:
-
-    The goal of this exercise is to extend the Sudoku program described in the
-    lecture of this week with functions that can also handle Sudokus of a special
-    kind: the Sudokus that appear in the Dutch evening newspaper NRC-Handelsblad
-    each week (designed by Peter Ritmeester, from Oct 8, 2005 onward). These NRC
-    Sudokus are special in that they have to satisfy a few extra constraints: in
-    addition to the usual Sudoku constraints, each of the 3×3 subgrids with
-    left-top corner (2,2), (2,6), (6,2), and (6,6) should also yield an injective
-    function. The above figure gives an example (this is the NRC sudoku that
-    appeared Saturday Nov 26, 2005). Your task is to formalize this extra
-    constraint, and to use your formalization in a program that can solve this
+    Exercise 1: Your task is to formalize this extra constraint,
+    and to use your formalization in a program that can solve this
     Sudoku. See also the webpage of Andries Brouwer.
-
     Deliverables: modified Sudoku solver, solution to the above puzzle, indication of time spent.
 -}
 
+nrcBlocks :: [[Int]]
+nrcBlocks = [[2..5],[6..8]]
+
+nrcBl :: Int -> [Int]
+nrcBl x = concat $ filter (elem x) nrcBlocks 
+
+nrcGrid :: Sudoku -> (Row,Column) -> [Value]
+nrcGrid s (r,c) = 
+  [ s (r',c') | r' <- bl r, c' <- bl c ]
+
+nrcInjective :: Sudoku -> (Row, Column) -> Bool
+nrcInjective s (r,c) = injective vs where 
+    vs = filter (/= 0) (nrcGrid s (r,c))
+
+problem1 :: Grid
+problem1 = [[0,0,0,3,0,0,0,0,0],
+            [0,0,0,7,0,0,3,0,0],
+            [2,0,0,0,0,0,0,0,8],
+            [0,0,6,0,0,5,0,0,0],
+            [0,9,1,6,0,0,0,0,0],
+            [3,0,0,0,7,1,2,0,0],
+            [0,0,0,0,0,0,0,3,1],
+            [0,8,0,0,4,0,0,0,0],
+            [0,0,2,0,0,0,0,0,0]]
+
+    +---------+---------+---------+
+    |         | 3       |         |
+    |   +-----|--+   +--|-----+   |
+    |   |     | 7|   |  | 3   |   |
+    | 2 |     |  |   |  |     | 8 |
+    +---------+---------+---------+
+    |   |   6 |  |   |5 |     |   |
+    |   +-----|--+   +--|-----+   |
+    |    9  1 | 6       |         |
+    |   +-----|--+   +--|-----+   |
+    | 3 |     |  | 7 |1 | 2   |   |
+    +---------+---------+---------+
+    |   |     |  |   |  |    3| 1 |
+    |   |8    |  | 4 |  |     |   |
+    |   +-----|--+   +--|-----+   |
+    |       2 |         |         |
+    +---------+---------+---------+
+
+
+
+solution1 :: Grid
+solution1 = [[4,7,8,3,9,2,6,1,5],
+            [6,1,9,7,5,8,3,2,4],
+            [2,3,5,4,1,6,9,7,8],
+            [7,2,6,8,3,5,1,4,9],
+            [8,9,1,6,2,4,7,5,3],
+            [3,5,4,9,7,1,2,8,6],
+            [5,6,7,2,8,9,4,3,1],
+            [9,8,3,1,4,7,5,6,2],
+            [1,4,2,5,6,3,8,9,7]]
 {-
     Exercise 2:
 
