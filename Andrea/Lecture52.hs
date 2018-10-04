@@ -1,15 +1,24 @@
-
-module Lecture5
-
-where 
+module Lecture52
+    where 
 
 import Data.List
 import System.Random
 
-type Row    = Int 
+data Tree a = T a [Tree a] deriving (Eq,Ord,Show)
+
 type Column = Int 
-type Value  = Int
+type Constraint = (Row,Column,[Value])
+type Constrnt = [[Position]]
 type Grid   = [[Value]]
+type Node = (Sudoku,[Constraint])
+type Position = (Row,Column)
+type Row    = Int 
+type Sudoku = (Row,Column) -> Value
+type Value  = Int
+
+rowConstrnt = [[(r,c)| c <- values ] | r <- values ]
+columnConstrnt = [[(r,c)| r <- values ] | c <- values ]
+blockConstrnt = [[(r,c)| r <- b1, c <- b2 ] | b1 <- blocks, b2 <- blocks ]
 
 positions, values :: [Int]
 positions = [1..9]
@@ -50,8 +59,6 @@ showGrid [as,bs,cs,ds,es,fs,gs,hs,is] =
     putStrLn ("+-------+-------+-------+")
     showRow gs; showRow hs; showRow is
     putStrLn ("+-------+-------+-------+")
-
-type Sudoku = (Row,Column) -> Value
 
 sud2grid :: Sudoku -> Grid
 sud2grid s = 
@@ -102,7 +109,13 @@ freeAtPos s (r,c) =
   (freeInRow s r) 
    `intersect` (freeInColumn s c) 
    `intersect` (freeInSubgrid s (r,c)) 
-  --  `intersect` (freeInNrcgrid s (r,c)) 
+   `intersect` (freeInNrcgrid s (r,c)) 
+
+freeAtPos' :: Sudoku -> Position -> Constrnt -> [Value]
+freeAtPos' s (r,c) xs = let
+  ys = filter (elem (r,c)) xs
+    in
+  foldl1 intersect (map ((values \\) . map s) ys)
 
 injective :: Eq a => [a] -> Bool
 injective xs = nub xs == xs
@@ -131,19 +144,15 @@ consistent s = and $
                 ++
                [ subgridInjective s (r,c) | 
                     r <- [1,4,7], c <- [1,4,7]]
-                -- ++
-              --  [ nrcInjective s (r,c) |
-              --       r <- [2, 6], c <- [2, 6]]
+                ++
+               [ nrcInjective s (r,c) |
+                    r <- [2, 6], c <- [2, 6]]
 
 extend :: Sudoku -> ((Row,Column),Value) -> Sudoku
 extend = update
 
 update :: Eq a => (a -> b) -> (a,b) -> a -> b 
 update f (y,z) x = if x == y then z else f x 
-
-type Constraint = (Row,Column,[Value])
-
-type Node = (Sudoku,[Constraint])
 
 showNode :: Node -> IO()
 showNode = showSudoku . fst
@@ -165,8 +174,8 @@ prune (r,c,v) ((x,y,zs):rest)
   | c == y = (x,y,zs\\[v]) : prune (r,c,v) rest
   | sameblock (r,c) (x,y) = 
         (x,y,zs\\[v]) : prune (r,c,v) rest
-  -- | sameNrcblock (r,c) (x,y) = 
-    -- (x,y,zs\\[v]) : prune (r,c,v) rest
+  | sameNrcblock (r,c) (x,y) = 
+    (x,y,zs\\[v]) : prune (r,c,v) rest
   | otherwise = (x,y,zs) : prune (r,c,v) rest
 
 sameblock :: (Row,Column) -> (Row,Column) -> Bool
@@ -193,8 +202,6 @@ constraints s = sortBy length3rd
     [(r,c, freeAtPos s (r,c)) | 
                        (r,c) <- openPositions s ]
 
-data Tree a = T a [Tree a] deriving (Eq,Ord,Show)
-
 exmple1 = T 1 [T 2 [], T 3 []]
 exmple2 = T 0 [exmple1,exmple1,exmple1]
 
@@ -208,8 +215,7 @@ takeT :: Int -> Tree a -> Tree a
 takeT 0 (T x _) = T x []
 takeT n (T x ts) = T x $ map (takeT (n-1)) ts
 
-search :: (node -> [node]) 
-       -> (node -> Bool) -> [node] -> [node]
+search :: (node -> [node]) -> (node -> Bool) -> [node] -> [node]
 search children goal [] = []
 search children goal (x:xs) 
   | goal x    = x : search children goal xs
@@ -378,3 +384,13 @@ main = do [r] <- rsolveNs [emptyN]
           s  <- genProblem r
           showNode s
 
+
+type Aap = [Int]
+type Banaan = [Aap]
+
+testf :: IO Banaan -> IO Int
+testf input = do
+    banaan <- input
+    return $ if int > 5 then 10 else 20
+        where 
+            int = (head $ head banaan)
