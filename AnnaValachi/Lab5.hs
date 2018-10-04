@@ -1,3 +1,8 @@
+module Lab5
+
+where
+
+import Lecture5
 {-
     Exercise 1:
 
@@ -16,8 +21,7 @@
     Deliverables: modified Sudoku solver, solution to the above puzzle, indication of time spent.
 -}
 
---Solution is Lecture5
---Time : 1 hour
+
 problem1 :: Grid
 problem1 = [[0,0,0,3,0,0,0,0,0],
             [0,0,0,7,0,0,3,0,0],
@@ -39,6 +43,19 @@ solution1 = [[4,7,8,3,9,2,6,1,5],
             [5,6,7,2,8,9,4,3,1],
             [9,8,3,1,4,7,5,6,2],
             [1,4,2,5,6,3,8,9,7]]
+
+problem3 :: Grid
+problem3 = [[0,0,2,0,1,0,0,0,0],
+            [1,0,0,5,0,0,0,0,3],
+            [0,8,0,0,3,0,6,0,0],
+            [0,7,9,0,0,0,0,0,0],
+            [0,0,0,9,0,0,3,0,1],
+            [8,0,0,0,0,0,2,0,0],
+            [0,0,0,0,0,9,0,0,0],
+            [0,0,1,0,0,0,0,4,9],
+            [0,0,5,0,0,4,1,8,0]]
+
+   
 
 {-
     Exercise 2:
@@ -82,6 +99,35 @@ solution1 = [[4,7,8,3,9,2,6,1,5],
 
     Deliverables: testing code, test report, indication of time spent.
 -}
+
+-- anna and andrea together
+-- Function that prints the amount of solutions for a certain grid (BEWARE FOR INFINITE ONES)
+printSolutions :: Grid -> IO Int
+printSolutions gr = do
+    return $ length(solveNs (initNode gr))
+
+-- Bool to test if there is 1 solution to a sudoku.
+testMinimalism :: Grid -> Bool
+testMinimalism gr = not (longerThan 1 (solveNs (initNode gr))) &&
+                    length (solveNs (initNode gr)) == 1
+
+-- Functions to check if a list is longer than a certain amount of elements.
+-- Using instead of length :: https://stackoverflow.com/questions/7371730/how-to-tell-if-a-list-is-infinite
+isNonEmpty :: [a] -> Bool
+isNonEmpty [] = False
+isNonEmpty (_:_) = True
+
+longerThan :: Int -> [a] -> Bool
+longerThan n xs = isNonEmpty $ drop n xs
+
+check :: Sudoku -> [(Row,Column)] -> Bool
+check sud [] = True
+check sud (x:xs) = not (testMinimalism(sud2grid(eraseS sud x))) && check sud xs
+
+checkMinimalismLessHints :: Grid -> Bool
+checkMinimalismLessHints gr = check sud (filledPositions sud)
+    where sud = grid2sud gr
+
 
 {-
     Exercise 4:
