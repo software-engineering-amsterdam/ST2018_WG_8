@@ -18,6 +18,9 @@ values    = [1..9]
 blocks :: [[Int]]
 blocks = [[1..3],[4..6],[7..9]]
 
+nrcBlocks :: [[Int]]
+nrcBlocks = [[2..5],[6..8]]
+
 showVal :: Value -> String
 showVal 0 = " "
 showVal d = show d
@@ -48,6 +51,25 @@ showGrid [as,bs,cs,ds,es,fs,gs,hs,is] =
     showRow gs; showRow hs; showRow is
     putStrLn ("+-------+-------+-------+")
 
+showNrcGrid [as,bs,cs,ds,es,fs,gs,hs,is] =
+  do  putStrLn ("+-------+-------+-------+")
+      showRow as; 
+      putStrLn ("   +-------+   +-------+   ")
+      showRow bs;
+      showRow cs;
+      putStrLn ("+-------+-------+-------+")
+      showRow ds;
+      putStrLn ("   +-------+   +-------+   ")
+      showRow es;
+      putStrLn ("   +-------+   +-------+   ")
+      showRow fs;
+      putStrLn ("+-------+-------+-------+")
+      showRow gs;
+      showRow hs;
+      putStrLn ("   +-------+   +-------+   ")
+      showRow is
+      putStrLn ("+-------+-------+-------+")
+
 type Sudoku = (Row,Column) -> Value
 
 sud2grid :: Sudoku -> Grid
@@ -63,11 +85,21 @@ grid2sud gr = \ (r,c) -> pos gr (r,c)
 showSudoku :: Sudoku -> IO()
 showSudoku = showGrid . sud2grid
 
+showNrcSudoku :: Sudoku -> IO()
+showNrcSudoku = showNrcGrid . sud2grid
+
 bl :: Int -> [Int]
 bl x = concat $ filter (elem x) blocks 
 
+nrcBl :: Int -> [Int]
+nrcBl x = concat $ filter (elem x) nrcBlocks 
+
 subGrid :: Sudoku -> (Row,Column) -> [Value]
 subGrid s (r,c) = 
+  [ s (r',c') | r' <- bl r, c' <- bl c ]
+
+nrcGrid :: Sudoku -> (Row,Column) -> [Value]
+nrcGrid s (r,c) = 
   [ s (r',c') | r' <- bl r, c' <- bl c ]
 
 freeInSeq :: [Value] -> [Value]
@@ -75,7 +107,7 @@ freeInSeq seq = values \\ seq
 
 freeInRow :: Sudoku -> Row -> [Value]
 freeInRow s r = 
-  freeInSeq [ s (r,i) | i <- positions  ]
+  freeInSeq [ s (r,i) | i <- positions ]
 
 freeInColumn :: Sudoku -> Column -> [Value]
 freeInColumn s c = 
@@ -84,11 +116,15 @@ freeInColumn s c =
 freeInSubgrid :: Sudoku -> (Row,Column) -> [Value]
 freeInSubgrid s (r,c) = freeInSeq (subGrid s (r,c))
 
+freeInNrcgrid :: Sudoku -> (Row,Column) -> [Value]
+freeInNrcgrid s (r,c) = freeInSeq (nrcGrid s (r,c))
+
 freeAtPos :: Sudoku -> (Row,Column) -> [Value]
 freeAtPos s (r,c) = 
   (freeInRow s r) 
    `intersect` (freeInColumn s c) 
    `intersect` (freeInSubgrid s (r,c)) 
+   `intersect` (freeInNrcgrid s (r,c)) 
 
 injective :: Eq a => [a] -> Bool
 injective xs = nub xs == xs
@@ -104,6 +140,10 @@ colInjective s c = injective vs where
 subgridInjective :: Sudoku -> (Row,Column) -> Bool
 subgridInjective s (r,c) = injective vs where 
    vs = filter (/= 0) (subGrid s (r,c))
+  
+nrcInjective :: Sudoku -> (Row, Column) -> Bool
+nrcInjective s (r,c) = injective vs where 
+    vs = filter (/= 0) (nrcGrid s (r,c))
 
 consistent :: Sudoku -> Bool
 consistent s = and $
