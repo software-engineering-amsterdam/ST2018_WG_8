@@ -102,10 +102,12 @@ problem3 = [[0,0,2,0,1,0,0,0,0],
 
 -- Each problem P is minimal if solved only returns 1 Node in the returned [Node].
 
--- Function that prints the amount of solutions for a certain grid (BEWARE FOR INFINITE ONES)
+-- Helper function that prints the amount of solutions for a certain grid (maxed out at 10.)
 printSolutions :: Grid -> IO Int
 printSolutions gr = do
-    return $ length(solveNs (initNode gr))
+    if not (longerThan 10 (solveNs (initNode gr)))
+        then return $ length(solveNs (initNode gr))
+        else return 1000000
 
 -- Bool to test if there is 1 solution to a sudoku.
 testMinimalism :: Grid -> Bool
@@ -129,8 +131,12 @@ checkMinimalismLessHints :: Grid -> Bool
 checkMinimalismLessHints gr = check sud (filledPositions sud)
     where sud = grid2sud gr
 
-    -- EXERCISE 3 == DONE (BUT JUST ADD RANDOM GENERATED MINIMAL SUDOKU PROBLEMS)
-
+testCheck :: IO Bool
+testCheck = do 
+    [sud] <- rsolveNs [emptyN]
+    minSud  <- genProblem sud
+    return $ checkMinimalismLessHints (sud2grid (fst minSud))
+    -- I used Anna's mind.
 
 {-
     Exercise 4:
