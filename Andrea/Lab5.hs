@@ -12,6 +12,10 @@ import System.Random
     Deliverables: modified Sudoku solver, solution to the above puzzle, indication of time spent.
 -}
 
+
+-- 1 hour (incl. sudoku solution on paper)
+-- Code is in Lecture5.hs
+
 problem1 :: Grid
 problem1 = [[0,0,0,3,0,0,0,0,0],
             [0,0,0,7,0,0,3,0,0],
