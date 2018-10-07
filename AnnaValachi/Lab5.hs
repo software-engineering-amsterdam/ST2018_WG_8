@@ -118,6 +118,14 @@ checkGenerator = do [r] <- rsolveNs [emptyN]
                     s  <- genProblem r
                     return (not (longerThan 1 (solveNs ([s]))) && length (solveNs ([s])) == 1 && checkMinimalismLessHints (sud2grid (fst s)))
 
+---Really Slow!!! Any Ideas??
+testing :: Int -> IO Bool
+testing 0 = do
+    return True
+testing n = do
+    rest <- (testing (n - 1))
+    x <- checkGenerator
+    return (x && rest)
 
 
 --Exercise 4:
