@@ -85,38 +85,20 @@ problem3 = [[0,0,2,0,1,0,0,0,0],
     Deliverables: testing code, test report, indication of time spent.
 -}
 
--- anna and andrea together
--- Function that prints the amount of solutions for a certain grid (BEWARE FOR INFINITE ONES)
-printSolutions :: Grid -> IO Int
-printSolutions gr = do
-    return $ length(solveNs (initNode gr))
+check :: Node -> [(Row,Column)] -> Bool
+check nod [] = True
+check nod (x:xs) = not (uniqueSol (eraseN nod x)) && check nod xs
 
--- Bool to test if there is 1 solution to a sudoku.
-testMinimalism :: Grid -> Bool
-testMinimalism gr = not (longerThan 1 (solveNs (initNode gr))) &&
-                    length (solveNs (initNode gr)) == 1
+--checking if erasing one of the hints admits more than one solution
+checkMinimalismLessHints :: Node -> Bool
+checkMinimalismLessHints nod = check nod (filledPositions (fst nod))
 
--- Functions to check if a list is longer than a certain amount of elements.
--- Using instead of length :: https://stackoverflow.com/questions/7371730/how-to-tell-if-a-list-is-infinite
-isNonEmpty :: [a] -> Bool
-isNonEmpty [] = False
-isNonEmpty (_:_) = True
-
-longerThan :: Int -> [a] -> Bool
-longerThan n xs = isNonEmpty $ drop n xs
-
-check :: Sudoku -> [(Row,Column)] -> Bool
-check sud [] = True
-check sud (x:xs) = not (testMinimalism(sud2grid(eraseS sud x))) && check sud xs
-
-checkMinimalismLessHints :: Grid -> Bool
-checkMinimalismLessHints gr = check sud (filledPositions sud)
-    where sud = grid2sud gr
-
+--sudoku generator from Lecture5. checks if the generated sudoku has only one solution and
+--if erasing one of the hints admits more than one solution
 checkGenerator :: IO Bool
 checkGenerator = do [r] <- rsolveNs [emptyN]
                     s  <- genProblem r
-                    return (not (longerThan 1 (solveNs ([s]))) && length (solveNs ([s])) == 1 && checkMinimalismLessHints (sud2grid (fst s)))
+                    return (uniqueSol s && checkMinimalismLessHints s)
 
 ---Really Slow!!! Any Ideas??
 testing :: Int -> IO Bool
@@ -126,7 +108,6 @@ testing n = do
     rest <- (testing (n - 1))
     x <- checkGenerator
     return (x && rest)
-
 
 --Exercise 4:
 
