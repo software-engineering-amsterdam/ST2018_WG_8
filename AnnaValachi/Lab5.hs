@@ -113,6 +113,11 @@ checkMinimalismLessHints :: Grid -> Bool
 checkMinimalismLessHints gr = check sud (filledPositions sud)
     where sud = grid2sud gr
 
+checkGenerator :: IO Bool
+checkGenerator = do [r] <- rsolveNs [emptyN]
+                    s  <- genProblem r
+                    return (not (longerThan 1 (solveNs ([s]))) && length (solveNs ([s])) == 1 && checkMinimalismLessHints (sud2grid (fst s)))
+
 
 
 --Exercise 4:
