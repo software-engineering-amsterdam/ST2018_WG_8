@@ -1,20 +1,46 @@
-{-
-    Exercise 1:
+module Lab5
 
-    The goal of this exercise is to extend the Sudoku program described in the
-    lecture of this week with functions that can also handle Sudokus of a special
-    kind: the Sudokus that appear in the Dutch evening newspaper NRC-Handelsblad
-    each week (designed by Peter Ritmeester, from Oct 8, 2005 onward). These NRC
-    Sudokus are special in that they have to satisfy a few extra constraints: in
-    addition to the usual Sudoku constraints, each of the 3×3 subgrids with
-    left-top corner (2,2), (2,6), (6,2), and (6,6) should also yield an injective
-    function. The above figure gives an example (this is the NRC sudoku that
-    appeared Saturday Nov 26, 2005). Your task is to formalize this extra
-    constraint, and to use your formalization in a program that can solve this
-    Sudoku. See also the webpage of Andries Brouwer.
+where
 
-    Deliverables: modified Sudoku solver, solution to the above puzzle, indication of time spent.
--}
+import Lecture5
+
+--Exercise 1:
+--Solution in Lecture5
+
+problem1 :: Grid
+problem1 = [[0,0,0,3,0,0,0,0,0],
+            [0,0,0,7,0,0,3,0,0],
+            [2,0,0,0,0,0,0,0,8],
+            [0,0,6,0,0,5,0,0,0],
+            [0,9,1,6,0,0,0,0,0],
+            [3,0,0,0,7,1,2,0,0],
+            [0,0,0,0,0,0,0,3,1],
+            [0,8,0,0,4,0,0,0,0],
+            [0,0,2,0,0,0,0,0,0]]
+
+solution1 :: Grid
+solution1 = [[4,7,8,3,9,2,6,1,5],
+            [6,1,9,7,5,8,3,2,4],
+            [2,3,5,4,1,6,9,7,8],
+            [7,2,6,8,3,5,1,4,9],
+            [8,9,1,6,2,4,7,5,3],
+            [3,5,4,9,7,1,2,8,6],
+            [5,6,7,2,8,9,4,3,1],
+            [9,8,3,1,4,7,5,6,2],
+            [1,4,2,5,6,3,8,9,7]]
+
+problem3 :: Grid
+problem3 = [[0,0,2,0,1,0,0,0,0],
+            [1,0,0,5,0,0,0,0,3],
+            [0,8,0,0,3,0,6,0,0],
+            [0,7,9,0,0,0,0,0,0],
+            [0,0,0,9,0,0,3,0,1],
+            [8,0,0,0,0,0,2,0,0],
+            [0,0,0,0,0,9,0,0,0],
+            [0,0,1,0,0,0,0,4,9],
+            [0,0,5,0,0,4,1,8,0]]
+
+   
 
 {-
     Exercise 2:
@@ -59,15 +85,73 @@
     Deliverables: testing code, test report, indication of time spent.
 -}
 
-{-
-    Exercise 4:
+check :: Node -> [(Row,Column)] -> Bool
+check nod [] = True
+check nod (x:xs) = not (uniqueSol (eraseN nod x)) && check nod xs
 
-    Write a program that generates Sudoku problems with three empty blocks.
-    Is it also possible to generate Sudoku problems with four empty blocks?
-    Five? How can you check this?
+--checking if erasing one of the hints admits more than one solution
+checkMinimalismLessHints :: Node -> Bool
+checkMinimalismLessHints nod = check nod (filledPositions (fst nod))
 
-    Deliverables: generator, short report on findings, indication of time spent.
--}
+--sudoku generator from Lecture5. checks if the generated sudoku has only one solution and
+--if erasing one of the hints admits more than one solution
+checkGenerator :: IO Bool
+checkGenerator = do [r] <- rsolveNs [emptyN]
+                    s  <- genProblem r
+                    return (uniqueSol s && checkMinimalismLessHints s)
+
+---Really Slow!!! Any Ideas??
+--Check only with 5 or 10!!!
+testing :: Int -> IO Bool
+testing 0 = do
+    return True
+testing n = do
+    rest <- (testing (n - 1))
+    x <- checkGenerator
+    return (x && rest)
+
+--Exercise 4:
+
+--list with all the positions
+allPositions = [(r,c) | r <- [1..9], c <- [1..9]]
+
+deleteBlock :: Node -> (Row,Column) -> Node
+deleteBlock n (r,c) = foldr (\rc n' -> eraseN n' rc) n (sameBlock (r,c))
+
+--list with all the positions which are included in a subgrid (given one position of this subgrid)
+sameBlock :: (Row, Column) -> [(Row, Column)]
+sameBlock (r,c) = [(x,y)| x <- bl r, y<- bl c]
+
+--check if the subgrids of two positions are in the same row or column
+--we don't want the three empty subgrids to be all in the same row or column
+checkRC :: (Row, Column) -> (Row, Column) ->Bool
+checkRC a b = (bl (fst a) /= bl (fst b) && bl (snd a) /= bl (snd b))
+
+-- We choose 3 random positions. We make sure that they are in different subgrids and that their subgrids 
+-- are not all in the same row or column.
+-- We delete the 3 subgrids in which our positions are included
+deleteBlocks :: Node -> IO Node
+deleteBlocks n = do list1 <- randomize allPositions
+                    let delBlock1 = head list1
+                    let list2 =  [a | a <- list1, not (a `elem` (sameBlock delBlock1))]
+                    let delBlock2 = head list2
+                    let list3 =  [a | a <- list2, not (a `elem` (sameBlock delBlock2)), (checkRC a delBlock2) || (checkRC a delBlock1)]
+                    let delBlock3 = head list3
+                    let delBlockList = [delBlock1,delBlock2,delBlock3]
+                    let newNode = foldr (\b n' -> deleteBlock n' b) n delBlockList
+                    return newNode
+
+
+--commented the two lines. To discuss what is a better solution!
+--This way we generate sudokus with ONLY 3 blocks empty and all the other positions filled
+--If i uncomment them we generate sudokus with 3 empty blocks and other empty positions as well
+randomSudoku :: IO ()
+randomSudoku = do [r] <- rsolveNs [emptyN]
+                  showNode r
+                  sudokuEmptyblocks <- deleteBlocks r
+                  --s <- genProblem sudokuEmptyblocks
+                  --showNode s
+                  showNode sudokuEmptyblocks
 
 {-
     Exercise 5:

@@ -18,6 +18,9 @@ values    = [1..9]
 blocks :: [[Int]]
 blocks = [[1..3],[4..6],[7..9]]
 
+nrcBlocks :: [[Int]]
+nrcBlocks = [[2..4],[6..8]]
+
 showVal :: Value -> String
 showVal 0 = " "
 showVal d = show d
@@ -66,16 +69,23 @@ showSudoku = showGrid . sud2grid
 bl :: Int -> [Int]
 bl x = concat $ filter (elem x) blocks 
 
+nrcBl :: Int -> [Int]
+nrcBl x = concat $ filter (elem x) nrcBlocks 
+
 subGrid :: Sudoku -> (Row,Column) -> [Value]
 subGrid s (r,c) = 
   [ s (r',c') | r' <- bl r, c' <- bl c ]
+
+nrcGrid :: Sudoku -> (Row,Column) -> [Value]
+nrcGrid s (r,c) = 
+  [ s (r',c') | r' <- nrcBl r, c' <- nrcBl c ]
 
 freeInSeq :: [Value] -> [Value]
 freeInSeq seq = values \\ seq 
 
 freeInRow :: Sudoku -> Row -> [Value]
 freeInRow s r = 
-  freeInSeq [ s (r,i) | i <- positions  ]
+  freeInSeq [ s (r,i) | i <- positions ]
 
 freeInColumn :: Sudoku -> Column -> [Value]
 freeInColumn s c = 
@@ -84,11 +94,15 @@ freeInColumn s c =
 freeInSubgrid :: Sudoku -> (Row,Column) -> [Value]
 freeInSubgrid s (r,c) = freeInSeq (subGrid s (r,c))
 
+freeInNrcgrid :: Sudoku -> (Row,Column) -> [Value]
+freeInNrcgrid s (r,c) = freeInSeq (nrcGrid s (r,c))
+
 freeAtPos :: Sudoku -> (Row,Column) -> [Value]
 freeAtPos s (r,c) = 
   (freeInRow s r) 
    `intersect` (freeInColumn s c) 
    `intersect` (freeInSubgrid s (r,c)) 
+  --  `intersect` (freeInNrcgrid s (r,c)) 
 
 injective :: Eq a => [a] -> Bool
 injective xs = nub xs == xs
@@ -104,6 +118,10 @@ colInjective s c = injective vs where
 subgridInjective :: Sudoku -> (Row,Column) -> Bool
 subgridInjective s (r,c) = injective vs where 
    vs = filter (/= 0) (subGrid s (r,c))
+  
+nrcInjective :: Sudoku -> (Row, Column) -> Bool
+nrcInjective s (r,c) = injective vs where 
+    vs = filter (/= 0) (nrcGrid s (r,c))
 
 consistent :: Sudoku -> Bool
 consistent s = and $
@@ -113,6 +131,9 @@ consistent s = and $
                 ++
                [ subgridInjective s (r,c) | 
                     r <- [1,4,7], c <- [1,4,7]]
+                -- ++
+              --  [ nrcInjective s (r,c) |
+              --       r <- [2, 6], c <- [2, 6]]
 
 extend :: Sudoku -> ((Row,Column),Value) -> Sudoku
 extend = update
@@ -144,10 +165,15 @@ prune (r,c,v) ((x,y,zs):rest)
   | c == y = (x,y,zs\\[v]) : prune (r,c,v) rest
   | sameblock (r,c) (x,y) = 
         (x,y,zs\\[v]) : prune (r,c,v) rest
+  -- | sameNrcblock (r,c) (x,y) = 
+    -- (x,y,zs\\[v]) : prune (r,c,v) rest
   | otherwise = (x,y,zs) : prune (r,c,v) rest
 
 sameblock :: (Row,Column) -> (Row,Column) -> Bool
 sameblock (r,c) (x,y) = bl r == bl x && bl c == bl y 
+
+sameNrcblock :: (Row,Column) -> (Row,Column) -> Bool
+sameNrcblock (r,c) (x,y) = nrcBl r == nrcBl x && nrcBl c == nrcBl y 
 
 initNode :: Grid -> [Node]
 initNode gr = let s = grid2sud gr in 
@@ -173,7 +199,6 @@ exmple1 = T 1 [T 2 [], T 3 []]
 exmple2 = T 0 [exmple1,exmple1,exmple1]
 
 grow :: (node -> [node]) -> node -> Tree node 
-
 grow step seed = T seed (map (grow step) (step seed))
 
 count :: Tree a -> Int 
