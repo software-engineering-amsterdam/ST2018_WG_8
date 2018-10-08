@@ -101,6 +101,7 @@ checkGenerator = do [r] <- rsolveNs [emptyN]
                     return (uniqueSol s && checkMinimalismLessHints s)
 
 ---Really Slow!!! Any Ideas??
+--Check only with 5 or 10!!!
 testing :: Int -> IO Bool
 testing 0 = do
     return True
