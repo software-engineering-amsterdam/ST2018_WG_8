@@ -109,6 +109,43 @@ testingForMinimal n = do
     Deliverables: generator, short report on findings, indication of time spent.
 -}
 
+--list with all the positions
+allPositions = [(r,c) | r <- [1..9], c <- [1..9]]
+
+deleteBlock :: Node -> (Row,Column) -> Node
+deleteBlock n (r,c) = foldr (\rc n' -> eraseN n' rc) n (sameBlock (r,c))
+
+--list with all the positions which are included in a subgrid (given one position of this subgrid)
+sameBlock :: (Row, Column) -> [(Row, Column)]
+sameBlock (r,c) = [(x,y)| x <- bl r, y<- bl c]
+
+--check if the subgrids of two positions are in the same row or column
+--we don't want the three empty subgrids to be all in the same row or column
+checkRC :: (Row, Column) -> (Row, Column) ->Bool
+checkRC a b = (bl (fst a) /= bl (fst b) && bl (snd a) /= bl (snd b))
+
+-- We choose 3 random positions. We make sure that they are in different subgrids and that their subgrids 
+-- are not all in the same row or column.
+-- We delete the 3 subgrids in which our positions are included
+deleteBlocks :: Node -> IO Node
+deleteBlocks n = do list1 <- randomize allPositions
+                    let delBlock1 = head list1
+                    let list2 =  [a | a <- list1, not (a `elem` (sameBlock delBlock1))]
+                    let delBlock2 = head list2
+                    let list3 =  [a | a <- list2, not (a `elem` (sameBlock delBlock2)), (checkRC a delBlock2) || (checkRC a delBlock1)]
+                    let delBlock3 = head list3
+                    let delBlockList = [delBlock1,delBlock2,delBlock3]
+                    let newNode = foldr (\b n' -> deleteBlock n' b) n delBlockList
+                    return newNode
+
+
+randomSudoku :: IO ()
+randomSudoku = do [r] <- rsolveNs [emptyN]
+                  showNode r
+                  sudokuEmptyblocks <- deleteBlocks r
+                  s <- genProblem sudokuEmptyblocks --making this a sudoku problem
+                  showNode s
+
 {-
     Exercise 5:
 
