@@ -18,6 +18,10 @@ values    = [1..9]
 blocks :: [[Int]]
 blocks = [[1..3],[4..6],[7..9]]
 
+-- New blocks with NRC locations
+newblocks :: [[Int]]
+newblocks = [[2,3,4],[6,7,8]]
+
 showVal :: Value -> String
 showVal 0 = " "
 showVal d = show d
@@ -66,9 +70,16 @@ showSudoku = showGrid . sud2grid
 bl :: Int -> [Int]
 bl x = concat $ filter (elem x) blocks
 
+newbl :: Int -> [Int]
+newbl x = concat $ filter (elem x) newblocks
+
 subGrid :: Sudoku -> (Row,Column) -> [Value]
 subGrid s (r,c) =
-  [ s (r',c') | r' <- bl r, c' <- bl c ]
+    [ s (r',c') | r' <- bl r, c' <- bl c ]
+
+newGrid :: Sudoku -> (Row,Column) -> [Value]
+newGrid s (r,c) =
+    [ s (r',c') | r' <- bl r, c' <- bl c ]
 
 freeInSeq :: [Value] -> [Value]
 freeInSeq seq = values \\ seq
@@ -85,7 +96,7 @@ freeInSubgrid :: Sudoku -> (Row,Column) -> [Value]
 freeInSubgrid s (r,c) = freeInSeq (subGrid s (r,c))
 
 freeInNrcGrid :: Sudoku -> (Row,Column) -> [Value]
-freeInNrcGrid s (r,c) = freeInSeq (subGrid s (r,c))
+freeInNrcGrid s (r,c) = freeInSeq (newGrid s (r,c))
 
 freeAtPos :: Sudoku -> (Row,Column) -> [Value]
 freeAtPos s (r,c) =
@@ -108,6 +119,10 @@ colInjective s c = injective vs where
 subgridInjective :: Sudoku -> (Row,Column) -> Bool
 subgridInjective s (r,c) = injective vs where
    vs = filter (/= 0) (subGrid s (r,c))
+
+newgridInjective :: Sudoku -> (Row,Column) -> Bool
+newgridInjective s (r,c) = injective vs where
+ vs = filter (/= 0) (newGrid s (r,c))
 
 consistent :: Sudoku -> Bool
 consistent s = and $
@@ -147,14 +162,19 @@ prune :: (Row,Column,Value)
       -> [Constraint] -> [Constraint]
 prune _ [] = []
 prune (r,c,v) ((x,y,zs):rest)
-  | r == x = (x,y,zs\\[v]) : prune (r,c,v) rest
-  | c == y = (x,y,zs\\[v]) : prune (r,c,v) rest
-  | sameblock (r,c) (x,y) =
+    | r == x = (x,y,zs\\[v]) : prune (r,c,v) rest
+    | c == y = (x,y,zs\\[v]) : prune (r,c,v) rest
+    | sameblock (r,c) (x,y) =
         (x,y,zs\\[v]) : prune (r,c,v) rest
-  | otherwise = (x,y,zs) : prune (r,c,v) rest
+    | newsameblock (r,c) (x,y) =
+        (x,y,zs\\[v]) : prune (r,c,v) rest
+    | otherwise = (x,y,zs) : prune (r,c,v) rest
 
 sameblock :: (Row,Column) -> (Row,Column) -> Bool
 sameblock (r,c) (x,y) = bl r == bl x && bl c == bl y
+
+newsameblock :: (Row,Column) -> (Row,Column) -> Bool
+newsameblock (r,c) (x,y) = newbl r == newbl x && newbl c == newbl y --added 
 
 initNode :: Grid -> [Node]
 initNode gr = let s = grid2sud gr in

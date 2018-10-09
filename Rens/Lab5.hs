@@ -34,6 +34,11 @@ original =
      [0,8,0,0,4,0,0,0,0],
      [0,0,2,0,0,0,0,0,0]]
 
+uniqueSol' :: Node -> Bool
+uniqueSol' node = singleton(take 2 (solveNs [node])) where
+    singleton [] = False
+    singleton [x] = True
+    singleton [x,y] = False
 
 {-
     Exercise 2:
@@ -78,6 +83,46 @@ original =
     Deliverables: testing code, test report, indication of time spent.
 -}
 
+-- By definition of a minimal sudoku, we generate a list of all the positions that
+-- are filled in the original sudoku. Then we run the previous function to see if
+-- by removing that number multiple functions arise.
+-- Helper function that prints the amount of solutions for a certain grid (maxed out at 10.)
+printSolutions :: Grid -> IO Int
+printSolutions gr = do
+    if not (longerThan 10 (solveNs (initNode gr)))
+        then return $ length(solveNs (initNode gr))
+        else return 1000000
+
+-- Bool to test if there is 1 solution to a sudoku.
+testMinimalism :: Grid -> Bool
+testMinimalism gr = not (longerThan 1 (solveNs (initNode gr))) &&
+                    length (solveNs (initNode gr)) == 1
+
+-- Functions to check if a list is longer than a certain amount of elements.
+-- Using instead of length :: https://stackoverflow.com/questions/7371730/how-to-tell-if-a-list-is-infinite
+isNonEmpty :: [a] -> Bool
+isNonEmpty [] = False
+isNonEmpty (_:_) = True
+
+longerThan :: Int -> [a] -> Bool
+longerThan n xs = isNonEmpty $ drop n xs
+
+check :: Sudoku -> [(Row,Column)] -> Bool
+check sud [] = True
+check sud (x:xs) = not (testMinimalism(sud2grid(eraseS sud x))) && check sud xs
+
+checkMinimalismLessHints :: Grid -> Bool
+checkMinimalismLessHints gr = check sud (filledPositions sud)
+    where sud = grid2sud gr
+
+testCheck :: IO Bool
+testCheck = do
+    [sud] <- rsolveNs [emptyN]
+    minSud  <- genProblem sud
+    return $ checkMinimalismLessHints (sud2grid (fst minSud))
+    -- I used Anna's mind.
+
+
 {-
     Exercise 4:
 
@@ -87,6 +132,48 @@ original =
 
     Deliverables: generator, short report on findings, indication of time spent.
 -}
+
+--list with all the positions
+allPositions = [(r,c) | r <- [1..9], c <- [1..9]]
+
+deleteBlock :: Node -> (Row,Column) -> Node
+deleteBlock n (r,c) = foldr (\rc n' -> eraseN n' rc) n (sameBlock (r,c))
+
+--list with all the positions which are included in a subgrid (given one position of this subgrid)
+sameBlock :: (Row, Column) -> [(Row, Column)]
+sameBlock (r,c) = [(x,y)| x <- bl r, y<- bl c]
+
+--check if the subgrids of two positions are in the same row or column
+--we don't want the three empty subgrids to be all in the same row or column
+checkRC :: (Row, Column) -> (Row, Column) ->Bool
+checkRC a b = (bl (fst a) /= bl (fst b) && bl (snd a) /= bl (snd b))
+
+-- We choose 3 random positions. We make sure that they are in different subgrids and that their subgrids
+-- are not all in the same row or column.
+-- We delete the 3 subgrids in which our positions are included
+deleteBlocks :: Node -> IO Node
+deleteBlocks n = do list1 <- randomize allPositions
+                    let delBlock1 = head list1
+                    let list2 =  [a | a <- list1, not (a `elem` (sameBlock delBlock1))]
+                    let delBlock2 = head list2
+                    let list3 =  [a | a <- list2, not (a `elem` (sameBlock delBlock2)), (checkRC a delBlock2) || (checkRC a delBlock1)]
+                    let delBlock3 = head list3
+                    let delBlockList = [delBlock1,delBlock2,delBlock3]
+                    let newNode = foldr (\b n' -> deleteBlock n' b) n delBlockList
+                    return newNode
+
+
+--commented the two lines. To discuss what is a better solution!
+--This way we generate sudokus with ONLY 3 blocks empty and all the other positions filled
+--If i uncomment them we generate sudokus with 3 empty blocks and other empty positions as well
+randomSudoku :: IO ()
+randomSudoku = do [r] <- rsolveNs [emptyN]
+                  showNode r
+                  sudokuEmptyblocks <- deleteBlocks r
+                  s <- genProblem sudokuEmptyblocks
+                  showNode s
+                  -- showNode sudokuEmptyblocks
+
 
 {-
     Exercise 5:
@@ -98,6 +185,62 @@ original =
     Deliverables: NRC Sudoku generator, indication of time spent.
 -}
 
+-- I created a prime functions for all functions that use the prune function
+-- and Anna added the constraint for NRC sudokus to the prune function.
+-- The generator will call these functions eventually and instead of generate
+-- a regular sudoku, it will generate one that adheres to the NRC constraints.
+prune' :: (Row,Column,Value) -> [Constraint] -> [Constraint]
+prune' _ [] = []
+prune' (r,c,v) ((x,y,zs):rest)
+    | r == x = (x,y,zs\\[v]) : prune' (r,c,v) rest
+    | c == y = (x,y,zs\\[v]) : prune' (r,c,v) rest
+    | sameblock (r,c) (x,y) =
+        (x,y,zs\\[v]) : prune' (r,c,v) rest
+    | newsameblock (r,c) (x,y) =
+        (x,y,zs\\[v]) : prune' (r,c,v) rest--added/ checks newsameblock
+    | otherwise = (x,y,zs) : prune' (r,c,v) rest
+
+search' :: (node -> [node])
+       -> (node -> Bool) -> [node] -> [node]
+search' children goal [] = []
+search' children goal (x:xs)
+  | goal x    = x : search' children goal xs
+  | otherwise = search' children goal ((children x) ++ xs)
+
+solveNs' :: [Node] -> [Node]
+solveNs' = search' succNode' solved
+
+succNode' :: Node -> [Node]
+succNode' (s,[]) = []
+succNode' (s,p:ps) = extendNode' (s,ps) p
+
+extendNode' :: Node -> Constraint -> [Node]
+extendNode' (s,constraints) (r,c,vs) =
+   [(extend s ((r,c),v),
+     sortBy length3rd $
+         prune' (r,c,v) constraints) | v <- vs ]
+
+
+rsuccNode' :: Node -> IO [Node]
+rsuccNode' (s,cs) = do
+    xs <- getRandomCnstr cs
+    if null xs then return [] else return (extendNode' (s,cs\\xs) (head xs))
+
+rsolveNs' :: [Node] -> IO [Node]
+rsolveNs' ns = rsearch rsuccNode' solved (return ns)
+
+-- This generates a solved sudoku NRC style
+genRandomNRCSudoku :: IO Node
+genRandomNRCSudoku = do
+    [r] <- rsolveNs' [emptyN]
+    return r
+
+-- This function minimizes the solved sudoku in order to make it a sudoku puzzle.
+genNRCProblem :: IO Node
+genNRCProblem = do
+    x <- genRandomNRCSudoku
+    x' <- genProblem x
+    return x'
 
 {-
     Exercise 6 (Bonus):
