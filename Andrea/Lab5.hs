@@ -3,7 +3,6 @@ module Lab5
 
 import Data.List
 import Lecture5
--- import Lecture52
 import System.Random
 
 {-
@@ -60,7 +59,7 @@ solution1 = [[4,7,8,3,9,2,6,1,5],
 
 -- Problem 2 has 2 solutions.
 problem2 :: Grid
-problem2 = [[2,9,5,7,4,3,8,6,1],
+problem2 =  [[2,9,5,7,4,3,8,6,1],
              [4,3,1,8,6,5,9,0,0],
              [8,7,6,1,9,2,5,4,3],
              [3,8,7,4,5,9,2,1,6],
@@ -80,14 +79,6 @@ problem3 = [[0,0,2,0,1,0,0,0,0],
             [0,0,0,0,0,9,0,0,0],
             [0,0,1,0,0,0,0,4,9],
             [0,0,5,0,0,4,1,8,0]]
-{-
-    Exercise 2: Refactor the code along the lines of this proposal,
-    and next compare the two versions for extendability and efficiency.
-    Which of the two versions is easier to modify for NRC sudokus,
-    and why? Which of the two versions is more efficient?
-    Devise your own testing method for this, and write a short test report.
-    Deliverables: Refactored code, test report, indication of time spent.
--}
 
 {-
     Exercise 3:
@@ -100,8 +91,6 @@ problem3 = [[0,0,2,0,1,0,0,0,0],
     Deliverables: testing code, test report, indication of time spent.
 -}
 
--- Each problem P is minimal if solved only returns 1 Node in the returned [Node].
-
 -- Helper function that prints the amount of solutions for a certain grid (maxed out at 10.)
 printSolutions :: Grid -> IO Int
 printSolutions gr = do
@@ -109,6 +98,7 @@ printSolutions gr = do
         then return $ length(solveNs (initNode gr))
         else return 1000000
 
+-- Each problem P is minimal if solved only returns 1 Node in the returned [Node].
 -- Bool to test if there is 1 solution to a sudoku.
 testMinimalism :: Grid -> Bool
 testMinimalism gr = not (longerThan 1 (solveNs (initNode gr))) &&
@@ -123,6 +113,8 @@ isNonEmpty (_:_) = True
 longerThan :: Int -> [a] -> Bool
 longerThan n xs = isNonEmpty $ drop n xs
 
+-- Removes 1 position and checks if it is not minimalist anymore,
+-- repeat for all positions.
 check :: Sudoku -> [(Row,Column)] -> Bool
 check sud [] = True
 check sud (x:xs) = not (testMinimalism(sud2grid(eraseS sud x))) && check sud xs
@@ -136,7 +128,18 @@ testCheck = do
     [sud] <- rsolveNs [emptyN]
     minSud  <- genProblem sud
     return $ checkMinimalismLessHints (sud2grid (fst minSud))
-    -- I used Anna's mind.
+
+problem5 :: Grid
+problem5 = [[6,0,0,0,0,0,0,9,2],
+            [0,0,7,0,0,0,0,0,0],
+            [8,5,0,0,0,0,0,0,0],
+            [7,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,9,4,1],
+            [3,1,8,0,0,0,0,5,7],
+            [0,0,0,7,0,9,2,3,0],
+            [0,0,0,4,2,0,0,6,0],
+            [0,0,0,1,6,0,0,0,4]]
+-- TO DO: TEST REPORT :) :)
 
 {-
     Exercise 4:
@@ -170,6 +173,8 @@ getSudoku x = do
     Deliverables: NRC Sudoku generator, indication of time spent.
 -}
 
+-- DONE!
+
 
 {-
     Exercise 6 (Bonus):
@@ -181,6 +186,10 @@ getSudoku x = do
     generates satisfy these properties? Consult (Pelánek 2014).
 -}
 
+-- Sudoku difficulties are based on what techniques you need to use. See: http://www.sudokuoftheday.com/techniques/.
+-- https://www.technologyreview.com/s/428729/mathematics-of-sudoku-leads-to-richter-scale-of-puzzle-hardness/
+-- The hardest sudoku currently known has 21 positions filled,
+-- while the sudoku with the least amount of clues known is 17.
 {-
     Exercise 7 (Bonus):
 
