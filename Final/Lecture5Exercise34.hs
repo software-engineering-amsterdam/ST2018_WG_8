@@ -108,6 +108,6 @@ main34 = do
     print(result)
 
     putStrLn("Exercise 4:")
-    putStrLn("Below is a generated sudoku with 3 empty blocks:")
+    putStrLn("Our generator doesn't always create sudokus with a unique solution, but they are still sudoku problems. \nBelow is a generated sudoku with 3 empty blocks:")
     r <- randomSudoku
     print(r)
