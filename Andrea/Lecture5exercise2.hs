@@ -1,4 +1,4 @@
-module Lecture52
+module Lecture5exercise2
     where 
 
 import Data.List
@@ -16,12 +16,64 @@ type Row    = Int
 type Sudoku = Position -> Value
 type Value  = Int
 
+{-
+    Exercise 2: Refactor the code along the lines of this proposal,
+    and next compare the two versions for extendability and efficiency.
+
+    Which of the two versions is easier to modify for NRC sudokus,
+    and why?
+
+    The version with centralised constraints (== after refactoring) is easier to adjust. 
+    Since the constraints and 'rules' are now all ordened and not spread 
+    over 10 different functions, there is less effort in adding new constraints. 
+
+    Which of the two versions is more efficient?
+    TO DO: Efficiency! 
+
+    TO DO: TESTING!
+    Devise your own testing method for this, and write a short test report.
+    Deliverables: Refactored code, test report, indication of time spent.
+-}
+
+problem1 :: Grid
+problem1 = [[0,0,0,3,0,0,0,0,0],
+            [0,0,0,7,0,0,3,0,0],
+            [2,0,0,0,0,0,0,0,8],
+            [0,0,6,0,0,5,0,0,0],
+            [0,9,1,6,0,0,0,0,0],
+            [3,0,0,0,7,1,2,0,0],
+            [0,0,0,0,0,0,0,3,1],
+            [0,8,0,0,4,0,0,0,0],
+            [0,0,2,0,0,0,0,0,0]]
+
+problem2 :: Grid
+problem2 = [[0,0,0,0,0,0,0,1,2],
+            [0,0,0,0,0,0,0,0,3],
+            [0,0,2,3,0,0,4,0,0],
+            [0,0,1,8,0,0,0,0,5],
+            [0,6,0,0,7,0,8,0,0],
+            [0,0,0,0,0,9,0,0,0],
+            [0,0,8,5,0,0,0,0,0],
+            [9,0,0,0,4,0,5,0,0],
+            [4,7,0,0,0,6,0,0,0]]
+
+problem3 :: Grid
+problem3 = [[6,0,0,0,0,0,0,9,2],
+            [0,0,7,0,0,0,0,0,0],
+            [8,5,0,0,0,0,0,0,0],
+            [7,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,9,4,1],
+            [3,1,8,0,0,0,0,5,7],
+            [0,0,0,7,0,9,2,3,0],
+            [0,0,0,4,2,0,0,6,0],
+            [0,0,0,1,6,0,0,0,4]]
+
 allConstrnt, blockConstrnt, columnConstrnt, nrcConstrnt, rowConstrnt :: Constrnt
 blockConstrnt = [[(r, c)| r <- b1, c <- b2 ] | b1 <- blocks, b2 <- blocks ]
 columnConstrnt = [[(r, c)| r <- values ] | c <- values ]
 nrcConstrnt = [[(r, c)| r <- b1, c <- b2 ] | b1 <- nrcBlocks, b2 <- nrcBlocks]
 rowConstrnt = [[(r, c)| c <- values ] | r <- values ]
-allConstrnt = blockConstrnt ++ columnConstrnt ++ nrcConstrnt ++ rowConstrnt
+allConstrnt = blockConstrnt ++ columnConstrnt ++ rowConstrnt -- ++ nrcConstrnt
 
 positions, values :: [Int]
 positions = [1..9]
@@ -76,93 +128,33 @@ grid2sud gr = \ (r, c) -> pos gr (r, c)
 showSudoku :: Sudoku -> IO()
 showSudoku = showGrid . sud2grid
 
-bl :: Int -> [Int]
-bl x = concat $ filter (elem x) blocks 
-
-nrcBl :: Int -> [Int]
-nrcBl x = concat $ filter (elem x) nrcBlocks 
-
-subGrid :: Sudoku -> Position -> [Value]
-subGrid s (r, c) = 
-  [ s (r',c') | r' <- bl r, c' <- bl c ]
-
-nrcGrid :: Sudoku -> Position -> [Value]
-nrcGrid s (r, c) = 
-  [ s (r',c') | r' <- nrcBl r, c' <- nrcBl c ]
-
--- freeInSeq :: [Value] -> [Value]
--- freeInSeq seq = values \\ seq 
-
--- freeInRow :: Sudoku -> Row -> [Value]
--- freeInRow s r = 
---   freeInSeq [ s (r,i) | i <- positions ]
-
--- freeInColumn :: Sudoku -> Column -> [Value]
--- freeInColumn s c = 
---   freeInSeq [ s (i,c) | i <- positions ]
-
--- freeInSubgrid :: Sudoku -> Position -> [Value]
--- freeInSubgrid s (r, c) = freeInSeq (subGrid s (r, c))
-
--- freeInNrcgrid :: Sudoku -> Position -> [Value]
--- freeInNrcgrid s (r, c) = freeInSeq (nrcGrid s (r, c))
-
--- freeAtPos :: Sudoku -> Position -> [Value]
--- freeAtPos s (r, c) = 
---   (freeInRow s r) 
---    `intersect` (freeInColumn s c) 
---    `intersect` (freeInSubgrid s (r, c)) 
---    `intersect` (freeInNrcgrid s (r, c)) 
-
 -- An extra if then else is needed. 
 -- In case of empty list ys there must be returned [1...9].
 freeAtPos' :: Sudoku -> Position -> Constrnt -> [Value]
 freeAtPos' s (r, c) xs = 
-  let ys = filter (elem (r, c)) xs
-    in
-  foldl1 intersect (map ((values \\) . map s) ys)
+  if ys /= [] 
+    then foldl1 intersect (map ((values \\) . map s) ys) 
+    else [1..9]
+    where ys = filter (elem (r, c)) xs
 
 freeAtPos :: Sudoku -> Position -> [Value]
 freeAtPos s (r, c) = freeAtPos' s (r, c) allConstrnt
 
+-- ????
+allValues :: Sudoku -> [Position] -> [Value]
+allValues s p = [ s (r, c) | (r, c) <- p]
+
 injective :: Eq a => [a] -> Bool
 injective xs = nub xs == xs
 
+-- THIS ???
 constrntInjective :: Sudoku -> [Position] -> Bool
-constrntInjective s (r, c) = injective vs where 
-    vs = filter (/= 0) [ s (r, i) | i <- positions]
-
-
--- rowInjective :: Sudoku -> Row -> Bool
--- rowInjective s r = injective vs where 
---    vs = filter (/= 0) [ s (r,i) | i <- positions ]
-
--- colInjective :: Sudoku -> Column -> Bool
--- colInjective s c = injective vs where 
---    vs = filter (/= 0) [ s (i,c) | i <- positions ]
-
--- subgridInjective :: Sudoku -> Position -> Bool
--- subgridInjective s (r, c) = injective vs where 
---    vs = filter (/= 0) (subGrid s (r, c))
-  
--- nrcInjective :: Sudoku -> Position -> Bool
--- nrcInjective s (r, c) = injective vs where 
---     vs = filter (/= 0) (nrcGrid s (r, c))
-
+constrntInjective s p = injective vs where 
+                                vs = filter (/= 0) (allValues s p)
 
 -- THIS IS NOT RIGHT YET
 consistent :: Sudoku -> Bool
-consistent s = and $
-                [ constrntInjective s r |  r <- positions ]
-              --  [ rowInjective s r |  r <- positions ]
-              --   ++
-              --  [ colInjective s c |  c <- positions ]
-              --   ++
-              --  [ subgridInjective s (r,c) | 
-              --       r <- [1,4,7], c <- [1,4,7]]
-              --   ++
-              --  [ nrcInjective s (r,c) |
-              --       r <- [2, 6], c <- [2, 6]]
+consistent s = and $ [ constrntInjective s r | r <- allConstrnt ]
 
 extend :: Sudoku -> (Position,Value) -> Sudoku
 extend = update
@@ -188,24 +180,10 @@ prune _ [] = []
 prune (r,c,v) ((x,y,zs):rest)
   | sameConstrnt (r, c) (x, y) = 
     (x,y,zs\\[v]) : prune (r,c,v) rest
-  -- | r == x = (x,y,zs\\[v]) : prune (r,c,v) rest
-  -- | c == y = (x,y,zs\\[v]) : prune (r,c,v) rest
-  -- | sameblock (r, c) (x,y) = 
-  --       (x,y,zs\\[v]) : prune (r,c,v) rest
-  -- | sameNrcblock (r, c) (x,y) = 
-  --   (x,y,zs\\[v]) : prune (r,c,v) rest
   | otherwise = (x,y,zs) : prune (r,c,v) rest
 
--- sameblock :: Position -> Position -> Bool
--- sameblock (r, c) (x,y) = bl r == bl x && bl c == bl y 
-
--- sameNrcblock :: Position -> Position -> Bool
--- sameNrcblock (r, c) (x,y) = nrcBl r == nrcBl x && nrcBl c == nrcBl y 
-
-
--- DOUBLE CHECK
 sameConstrnt :: Position -> Position -> Bool
-sameConstrnt r1 r2 = any (== True) [(elem r1 c) && (elem r2 c) | c <- allConstrnts]
+sameConstrnt r1 r2 = any (== True) [(elem r1 c) && (elem r2 c) | c <- allConstrnt]
 
 initNode :: Grid -> [Node]
 initNode gr = let s = grid2sud gr in 

@@ -1,7 +1,6 @@
 
 module Lecture5
-
-where 
+  where 
 
 import Data.List
 import System.Random
@@ -102,7 +101,7 @@ freeAtPos s (r,c) =
   (freeInRow s r) 
    `intersect` (freeInColumn s c) 
    `intersect` (freeInSubgrid s (r,c)) 
-  --  `intersect` (freeInNrcgrid s (r,c)) 
+   `intersect` (freeInNrcgrid s (r,c)) 
 
 injective :: Eq a => [a] -> Bool
 injective xs = nub xs == xs
@@ -131,11 +130,11 @@ consistent s = and $
                 ++
                [ subgridInjective s (r,c) | 
                     r <- [1,4,7], c <- [1,4,7]]
-                -- ++
-              --  [ nrcInjective s (r,c) |
-              --       r <- [2, 6], c <- [2, 6]]
+                ++
+               [ nrcInjective s (r,c) |
+                    r <- [2, 6], c <- [2, 6]]
 
-extend :: Sudoku -> ((Row,Column),Value) -> Sudoku
+extend :: Sudoku -> ((Row,Column), Value) -> Sudoku
 extend = update
 
 update :: Eq a => (a -> b) -> (a,b) -> a -> b 
@@ -165,8 +164,8 @@ prune (r,c,v) ((x,y,zs):rest)
   | c == y = (x,y,zs\\[v]) : prune (r,c,v) rest
   | sameblock (r,c) (x,y) = 
         (x,y,zs\\[v]) : prune (r,c,v) rest
-  -- | sameNrcblock (r,c) (x,y) = 
-    -- (x,y,zs\\[v]) : prune (r,c,v) rest
+  | sameNrcblock (r,c) (x,y) = 
+    (x,y,zs\\[v]) : prune (r,c,v) rest
   | otherwise = (x,y,zs) : prune (r,c,v) rest
 
 sameblock :: (Row,Column) -> (Row,Column) -> Bool
@@ -377,4 +376,3 @@ main = do [r] <- rsolveNs [emptyN]
           showNode r
           s  <- genProblem r
           showNode s
-
