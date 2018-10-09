@@ -50,7 +50,7 @@ problem1 = [[0,0,0,3,0,0,0,0,0],
 
 
 -- This is the solution to the problem above, with NRC constraint.
--- By running SolveAndShow problem1, you will see this:        
+-- By running SolveAndShow problem1, you will see the grid below, printed:        
 solution1 :: Grid
 solution1 = [[4,7,8,3,9,2,6,1,5],
              [6,1,9,7,5,8,3,2,4],
