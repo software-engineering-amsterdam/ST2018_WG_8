@@ -139,6 +139,17 @@ problem5 = [[6,0,0,0,0,0,0,9,2],
             [0,0,0,7,0,9,2,3,0],
             [0,0,0,4,2,0,0,6,0],
             [0,0,0,1,6,0,0,0,4]]
+
+problem6 :: Grid
+problem6 = [[4,5,6,0,0,0,2,7,8],
+            [7,3,1,0,0,0,9,5,6],
+            [9,8,2,0,0,0,4,3,1],
+            [0,0,0,5,8,4,0,0,0],
+            [0,0,0,3,2,6,0,0,0],
+            [0,0,0,7,9,1,0,0,0],
+            [2,7,5,0,0,0,0,0,0],
+            [3,1,9,0,0,0,0,0,0],
+            [8,6,4,0,0,0,0,0,0]]
 -- TO DO: TEST REPORT :) :)
 
 {-
@@ -184,15 +195,16 @@ getSudoku x = do
     that are minimal, but easy to solve by hand? Problems that are minimal but
     hard to solve by hand? How can you test whether the problems your program
     generates satisfy these properties? Consult (Pelánek 2014).
+    https://arxiv.org/pdf/1403.7373.pdf
 -}
 
--- Sudoku difficulties are based on what techniques you need to use. See: http://www.sudokuoftheday.com/techniques/.
--- https://www.technologyreview.com/s/428729/mathematics-of-sudoku-leads-to-richter-scale-of-puzzle-hardness/
--- The hardest sudoku currently known has 21 positions filled,
+-- Sudoku difficulties are based on what techniques you need to use, not per say the amount of filled positions.
+-- See: http://www.sudokuoftheday.com/techniques/ and https://www.technologyreview.com/s/428729/mathematics-of-sudoku-leads-to-richter-scale-of-puzzle-hardness/
+-- The hardest sudoku currently known has 21 positions filled ("Richter" scale).
 -- while the sudoku with the least amount of clues known is 17.
+
 {-
     Exercise 7 (Bonus):
-
     Minimal problems for NRC Sudokus need fewer hints than standard Sudoku problems.
     Investigate the difference. What is the average number of hints in a minimal
     standard Sudoku problem? What is the average number of hints in a minimal NRC

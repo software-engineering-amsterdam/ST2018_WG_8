@@ -68,6 +68,17 @@ problem3 = [[6,0,0,0,0,0,0,9,2],
             [0,0,0,4,2,0,0,6,0],
             [0,0,0,1,6,0,0,0,4]]
 
+problem6 :: Grid
+problem6 = [[4,5,6,0,0,0,2,7,8],
+            [7,3,1,0,0,0,9,5,6],
+            [9,8,2,0,0,0,4,3,1],
+            [0,0,0,5,8,4,0,0,0],
+            [0,0,0,3,2,6,0,0,0],
+            [0,0,0,7,9,1,0,0,0],
+            [2,7,5,0,0,0,0,0,0],
+            [3,1,9,0,0,0,0,0,0],
+            [8,6,4,0,0,0,0,0,0]]
+
 allConstrnt, blockConstrnt, columnConstrnt, nrcConstrnt, rowConstrnt :: Constrnt
 blockConstrnt = [[(r, c)| r <- b1, c <- b2 ] | b1 <- blocks, b2 <- blocks ]
 columnConstrnt = [[(r, c)| r <- values ] | c <- values ]
