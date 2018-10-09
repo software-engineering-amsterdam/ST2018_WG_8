@@ -5,20 +5,7 @@ import System.Random
 import Lecture5
 
 {-
-    Exercise 1:
-
-    The goal of this exercise is to extend the Sudoku program described in the
-    lecture of this week with functions that can also handle Sudokus of a special
-    kind: the Sudokus that appear in the Dutch evening newspaper NRC-Handelsblad
-    each week (designed by Peter Ritmeester, from Oct 8, 2005 onward). These NRC
-    Sudokus are special in that they have to satisfy a few extra constraints: in
-    addition to the usual Sudoku constraints, each of the 3×3 subgrids with
-    left-top corner (2,2), (2,6), (6,2), and (6,6) should also yield an injective
-    function. The above figure gives an example (this is the NRC sudoku that
-    appeared Saturday Nov 26, 2005). Your task is to formalize this extra
-    constraint, and to use your formalization in a program that can solve this
-    Sudoku. See also the webpage of Andries Brouwer.
-
+    Exercise 1 is in Lecture5Exercise1.hs
     Deliverables: modified Sudoku solver, solution to the above puzzle, indication of time spent.
 -}
 
