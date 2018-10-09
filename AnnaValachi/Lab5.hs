@@ -85,11 +85,18 @@ problem3 = [[0,0,2,0,1,0,0,0,0],
     Deliverables: testing code, test report, indication of time spent.
 -}
 
-check :: Node -> [(Row,Column)] -> Bool
-check nod [] = True
-check nod (x:xs) = not (uniqueSol (eraseN nod x)) && check nod xs
+uniqueSol' :: Node -> Bool
+uniqueSol' node = singleton(take 2 (solveNs [node])) where
+    singleton [] = False
+    singleton [x] = True
+    singleton [x,y] = False
+
 
 --checking if erasing one of the hints admits more than one solution
+check :: Node -> [(Row,Column)] -> Bool
+check nod [] = True
+check nod (x:xs) = not (uniqueSol' (eraseN nod x)) && check nod xs
+
 checkMinimalismLessHints :: Node -> Bool
 checkMinimalismLessHints nod = check nod (filledPositions (fst nod))
 
@@ -98,10 +105,9 @@ checkMinimalismLessHints nod = check nod (filledPositions (fst nod))
 checkGenerator :: IO Bool
 checkGenerator = do [r] <- rsolveNs [emptyN]
                     s  <- genProblem r
-                    return (uniqueSol s && checkMinimalismLessHints s)
+                    return (uniqueSol' s && checkMinimalismLessHints s)
 
 ---Really Slow!!! Any Ideas??
---Check only with 5 or 10!!!
 testing :: Int -> IO Bool
 testing 0 = do
     return True
