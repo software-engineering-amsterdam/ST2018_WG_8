@@ -20,7 +20,7 @@ import Lecture5
 -}
 
 {-
-    Exercise 4 is in Lecture5Exercise2.hs
+    Exercise 4 is in Lecture5Exercise34.hs
     Deliverables: generator, short report on findings, indication of time spent.
 -}
 
