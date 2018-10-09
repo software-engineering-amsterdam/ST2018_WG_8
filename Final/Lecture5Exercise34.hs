@@ -1,4 +1,4 @@
-module Lab5_ex34
+module Lecture5Exercise34
 
 where
 
@@ -15,32 +15,33 @@ import Test.QuickCheck
 
     Deliverables: testing code, test report, indication of time spent.
 -}
---modified uniqueSol. 
---We only need to know if there are more than one solutions, not to find all of them.
+
+-- Modified uniqueSol. 
+-- We only need to know if # solutions > 1, not to find all of them.
 uniqueSol' :: Node -> Bool
-uniqueSol' node = singleton(take 2 (solveNs [node])) where
+uniqueSol' node = singleton (take 2 (solveNs [node])) where
     singleton [] = False
     singleton [x] = True
-    singleton [x,y] = False
+    singleton [x, y] = False
 
-
---checking if erasing one of the hints admits more than one solution
+-- Checking if erasing one of the hints admits more than one solution
 check :: Node -> [(Row,Column)] -> Bool
-check nod [] = True
-check nod (x:xs) = not (uniqueSol' (eraseN nod x)) && check nod xs
+check n [] = True
+check n (x:xs) = not (uniqueSol' (eraseN n x)) && check n xs
 
 checkMinimalismLessHints :: Node -> Bool
-checkMinimalismLessHints nod = check nod (filledPositions (fst nod))
+checkMinimalismLessHints n = check n (filledPositions (fst n))
 
---sudoku generator from Lecture5. 
---We check if the generated sudoku has only one solution and
---if erasing one of the hints admits more than one solution
+-- Generator from Lecture5. 
+-- We check if the generated sudoku has only one solution and
+-- if erasing one of the hints admits more than one solution
 checkGenerator :: IO Bool
 checkGenerator = do [r] <- rsolveNs [emptyN]
                     s  <- genProblem r
                     return (uniqueSol' s && checkMinimalismLessHints s)
 
----Really Slow!!! 
+-- Testing the generator. It's really slow,
+-- but will eventually print if the generated problems are minimal.
 testingForMinimal :: Int -> IO Bool
 testingForMinimal 0 = do
     return True
@@ -49,28 +50,32 @@ testingForMinimal n = do
     x <- checkGenerator
     return (x && rest)
 
-
-
 {-
     Exercise 4:
     Write a program that generates Sudoku problems with three empty blocks.
     Is it also possible to generate Sudoku problems with four empty blocks?
     Five? How can you check this?
+
+    We interpreted blocks as whole grids of 3x3 squares.
+
+    It depends on what you call a 'problem'. Our generated sudokus here can still be 
+    minimalized and have unique solutions. If you remove more than 5 blocks however,
+    it will no longer be a unique solution.
     Deliverables: generator, short report on findings, indication of time spent.
 -}
 
---list with all the positions
+-- Create a list with all the positions
 allPositions = [(r,c) | r <- [1..9], c <- [1..9]]
 
 deleteBlock :: Node -> (Row,Column) -> Node
 deleteBlock n (r,c) = foldr (\rc n' -> eraseN n' rc) n (sameBlock (r,c))
 
---list with all the positions which are included in a subgrid (given one position of this subgrid)
+-- Create a list with all the positions which are included in a subgrid (given one position of this subgrid)
 sameBlock :: (Row, Column) -> [(Row, Column)]
 sameBlock (r,c) = [(x,y)| x <- bl r, y<- bl c]
 
---check if the subgrids of two positions are in the same row or column
---we don't want the three empty subgrids to be all in the same row or column
+-- Check if the subgrids of two positions are in the same row or column
+-- We don't want the three empty subgrids to be all in the same row or column
 checkRC :: (Row, Column) -> (Row, Column) ->Bool
 checkRC a b = (bl (fst a) /= bl (fst b) && bl (snd a) /= bl (snd b))
 
@@ -88,7 +93,6 @@ deleteBlocks n = do list1 <- randomize allPositions
                     let newNode = foldr (\b n' -> deleteBlock n' b) n delBlockList
                     return newNode
 
-
 randomSudoku :: IO ()
 randomSudoku = do [r] <- rsolveNs [emptyN]
                   showNode r
@@ -98,12 +102,12 @@ randomSudoku = do [r] <- rsolveNs [emptyN]
 
 main34 :: IO ()
 main34 = do
-    putStrLn("Exercise 3")
+    putStrLn("Exercise 3:")
     putStrLn("Testing with 10 tests because it is really slow:")
     result <- (testingForMinimal 10)
     print(result)
 
-    putStrLn("Exercise 4")
-    putStrLn("Showing generator:")
+    putStrLn("Exercise 4:")
+    putStrLn("Below is a generated sudoku with 3 empty blocks:")
     r <- randomSudoku
     print(r)
