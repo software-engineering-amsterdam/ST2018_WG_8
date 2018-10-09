@@ -148,16 +148,12 @@ deleteBlocks n = do list1 <- randomize allPositions
                     return newNode
 
 
---commented the two lines. To discuss what is a better solution!
---This way we generate sudokus with ONLY 3 blocks empty and all the other positions filled
---If i uncomment them we generate sudokus with 3 empty blocks and other empty positions as well
 randomSudoku :: IO ()
 randomSudoku = do [r] <- rsolveNs [emptyN]
                   showNode r
                   sudokuEmptyblocks <- deleteBlocks r
-                  --s <- genProblem sudokuEmptyblocks
-                  --showNode s
-                  showNode sudokuEmptyblocks
+                  s <- genProblem sudokuEmptyblocks --making this a sudoku problem
+                  showNode s
 
 {-
     Exercise 5:
