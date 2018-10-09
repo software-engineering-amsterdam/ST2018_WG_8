@@ -6,6 +6,11 @@ where
 import Data.List
 import System.Random
 
+-- We created prime functions for all functions that use the prune function
+-- and we added the constraint for NRC sudokus to the prune function.
+-- The generator will call these functions eventually and instead of generate
+-- a regular sudoku, it will generate one that adheres to the NRC constraints.
+
 type Row    = Int 
 type Column = Int 
 type Value  = Int
