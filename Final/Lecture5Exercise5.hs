@@ -446,9 +446,9 @@ genProblem n = do ys <- randomize xs
                   return (minimalize n ys)
    where xs = filledPositions (fst n)
 
-main :: IO ()
-main = do [r] <- rsolveNs [emptyN]
-          showNode r
-          s  <- genNRCProblem
-          showNode s
+main5 :: IO ()
+main5 = do [r] <- rsolveNs [emptyN]
+           showNode r
+           s  <- genNRCProblem
+           showNode s
 
