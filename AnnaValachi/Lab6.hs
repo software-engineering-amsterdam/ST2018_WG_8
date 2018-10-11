@@ -1,8 +1,10 @@
-module Lab6 
-    where
+module Lab6
+
+where 
+
+import Lecture6
 import Data.List
 import System.Random
-import Lecture6
 
 {- 
     Exercise 1:
@@ -23,15 +25,15 @@ powers :: [Integer] -> [Integer]
 powers [] = []
 powers (x:xs) = x : powers (map (2*) xs) 
 
-func2 :: Integer -> Integer -> [Integer] ->[Integer]
-func2 a c [] = []
-func2 a c (x:xs) = a^x `mod`c : func2 a c xs
+modulos :: Integer -> Integer -> [Integer] ->[Integer]
+modulos a c [] = []
+modulos a c (x:xs) = a^x `mod`c : modulos a c xs
 
-func3 ::  Integer -> Integer -> Integer -> [Integer] ->Integer
-func3 a b c lst = (product lst) `mod` c
+result ::  Integer -> Integer -> Integer -> [Integer] ->Integer
+result a b c lst = (product lst) `mod` c
 
 exM1 :: Integer -> Integer -> Integer -> Integer
-exM1 a b c = func3 a b c (func2 a c ( (powers (toBin b))))
+exM1 a b c = result a b c (modulos a c ( (powers (toBin b))))
 
 
 
@@ -49,6 +51,9 @@ exM1 a b c = func3 a b c (func2 a c ( (powers (toBin b))))
     Where the check can go wrong is on classifying composite numbers; these can slip through the Fermat test.
     Write a function composites :: [Integer] that generates the infinite list of composite natural numbers.
 -}
+
+composite :: [Integer]
+composite = [a | a<- [4..], not (prime a)]
 
 {- 
     Exercise 4:
