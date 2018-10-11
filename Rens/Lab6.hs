@@ -57,14 +57,8 @@ testExMEff n = do
     Write a function composites :: [Integer] that generates the infinite list of composite natural numbers.
 -}
 
-isqrt :: Integer -> Integer
-isqrt = floor . sqrt . fromIntegral
-
-isPrime :: Integer -> Bool
-isPrime k = null [ x | x <- [2..isqrt k], k `mod`x  == 0]
-
 composites :: [Integer]
-composites = [x | x <- [1..], x > 1, not (isPrime x)]
+composites = [x | x <- [1..], x > 1, not (prime x)]
 
 {-
     Exercise 4:
@@ -73,7 +67,36 @@ composites = [x | x <- [1..], x > 1, not (isPrime x)]
     What happens if you increase k?
 -}
 
-foolTheTest = [r | r <- ]
+-- I found 9 to be the lowest number to fool the test. I used the results form
+-- k 1, 2 and 3 and checked if either of them gave a false positive on the
+-- elements form the list of composites. However, if the functions don't give
+-- false positives it can run for long times and reach very high numbers of
+-- composites. This can take a long time while the first actual fooling numbers are
+-- low in the first 100. Therefore I loop the function between 1 and 100 in order
+-- to get a fooling number under the 100. I noticed with higher values for k,
+-- it will less often give a false positive but it will also run longer!
+-- With 0 it will always return a false positive.
+
+foolcomposites = [(primeTestsF 1 r, primeTestsF 2 r, primeTestsF 3 r) | r <- composites]
+
+foolTest :: Int -> IO Integer
+foolTest 100 = foolTest 0
+foolTest n = do
+    let r = foolcomposites !! n
+    r1 <- fst' r
+    r2 <- snd' r
+    r3 <- thrd r
+    if r1 || r2 || r3 then return (composites !! n) else ((foolTest (n + 1)) )
+
+thrd :: (IO Bool, IO Bool, IO Bool) -> IO Bool
+thrd (x, y, z) = z
+
+snd' :: (IO Bool, IO Bool, IO Bool) -> IO Bool
+snd' (x, y, z) = y
+
+fst' :: (IO Bool, IO Bool, IO Bool) -> IO Bool
+fst' (x, y, z) = x
+
 
 {-
     Exercise 5:
