@@ -58,7 +58,7 @@ multM x y = rem (x*y)
 invM :: Integer -> Integer -> Integer
 invM x n = let 
    (u,v) = fctGcd x n
-   copr  = x*u + v*n == 1
+   copr  = x * u + v * n == 1
    i     = if signum u == 1 then u else u + n  
  in 
    if copr then i else error "no inverse"
@@ -70,11 +70,11 @@ fGcd a b = if b == 0 then a
 fctGcd :: Integer -> Integer -> (Integer,Integer) 
 fctGcd a b = 
   if b == 0 
-  then (1,0) 
+  then (1, 0) 
   else 
      let 
-       (q,r) = quotRem a b
-       (s,t) = fctGcd b r 
+       (q, r) = quotRem a b
+       (s, t) = fctGcd b r 
      in (t, s - q*t)
 
 coprime :: Integer -> Integer -> Bool
@@ -114,15 +114,19 @@ expM x y = rem (x^y)
 exM :: Integer -> Integer -> Integer -> Integer
 exM = expM -- to be replaced by a fast version
 
+-- Fermat: (A ^ p) - a mod p == 0
+-- Fermat: (A ^ (p - 1)) mod p == 1 -> Can only because GCD == 1
+-- For each A chosen, GIVEN P == PRIME the output should always be 1
+-- https://www.khanacademy.org/computing/computer-science/cryptography/random-algorithms-probability/v/fermat-primality-test-prime-adventure-part-10
 primeTestF :: Integer -> IO Bool
 primeTestF n = do 
-   a <- randomRIO (2, n-1) :: IO Integer
-   return (exM a (n-1) n == 1)
+   a <- randomRIO (2, n-1) :: IO Integer -- Get random integer a between 2 and n
+   return (exM a (n-1) n == 1) -- Check if a ^ p - 1 mod p = 1 == Fermats little Theorem
 
 primeTestsF :: Int -> Integer -> IO Bool
 primeTestsF k n = do
- as <- sequence $ fmap (\_-> randomRIO (2,n-1)) [1..k]
- return (all (\ a -> exM a (n-1) n == 1) as)
+    as <- sequence $ fmap (\_-> randomRIO (2,n - 1)) [1..k] -- returns a random number between 2 and n - 1
+    return (all (\ a -> exM a (n - 1) n == 1) as) -- Checks if all numbers in a
 
 decomp :: Integer -> (Integer,Integer)
 decomp n0 = decomp' (0,n0) where
@@ -143,9 +147,6 @@ primeMR k n = do
     a <- randomRIO (2, n-1) :: IO Integer
     if exM a (n-1) n /= 1 || mrComposite a n
     then return False else primeMR (k-1) n
-
-composites :: [Integer]
-composites = error "not yet implemented"
 
 encodeDH :: Integer -> Integer -> Integer -> Integer
 encodeDH p k m = m*k `mod` p
