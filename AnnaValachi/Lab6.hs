@@ -14,6 +14,26 @@ import Lecture6
         x^32 (mod N) = x^2(mod N) → x^4 (mod N)→ … → x^32 (mod N).
 -}
 
+toBin :: Integer -> [Integer]
+toBin 0 = []
+toBin n = let (q,r) = n `divMod` 2 in r : toBin q
+
+
+powers :: [Integer] -> [Integer]
+powers [] = []
+powers (x:xs) = x : powers (map (2*) xs) 
+
+func2 :: Integer -> Integer -> [Integer] ->[Integer]
+func2 a c [] = []
+func2 a c (x:xs) = a^x `mod`c : func2 a c xs
+
+func3 ::  Integer -> Integer -> Integer -> [Integer] ->Integer
+func3 a b c lst = (product lst) `mod` c
+
+exM1 :: Integer -> Integer -> Integer -> Integer
+exM1 a b c = func3 a b c (func2 a c ( (powers (toBin b))))
+
+
 
 {-
     Exercise 2:
