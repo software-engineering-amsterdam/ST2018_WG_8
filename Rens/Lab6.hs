@@ -74,7 +74,8 @@ composites = [x | x <- [1..], x > 1, not (prime x)]
 -- composites. This can take a long time while the first actual fooling numbers are
 -- low in the first 100. Therefore I loop the function between 1 and 100 in order
 -- to get a fooling number under the 100. I noticed with higher values for k,
--- it will less often give a false positive but it will also run longer!
+-- it will less often give a false positive but it will also run longer because
+-- it will take more time to find the right number.
 -- With 0 it will always return a false positive.
 
 foolcomposites = [(primeTestsF 1 r, primeTestsF 2 r, primeTestsF 3 r) | r <- composites]
@@ -86,7 +87,7 @@ foolTest n = do
     r1 <- fst' r
     r2 <- snd' r
     r3 <- thrd r
-    if r1 || r2 || r3 then return (composites !! n) else ((foolTest (n + 1)) )
+    if r1 || r2 || r3 then return (composites !! n) else ((foolTest (n + 1)))
 
 thrd :: (IO Bool, IO Bool, IO Bool) -> IO Bool
 thrd (x, y, z) = z
@@ -112,10 +113,46 @@ fst' (x, y, z) = x
     Read the entry on Carmichael numbers on Wikipedia to explain what you find. If necessary, consult other sources.
 -}
 
+carmichael :: [Integer]
+carmichael = [ (6*k+1)*(12*k+1)*(18*k+1) |
+   k <- [2..],
+   prime (6*k+1),
+   prime (12*k+1),
+   prime (18*k+1) ]
+
+-- Carmichael's numbers are composites, by feeding these numbers to the primeTestsF
+-- function and checking when it returns true we can see what numbers fool the test.
+foolcarmichael = [(primeTestsF 1 r, primeTestsF 2 r, primeTestsF 3 r) | r <- carmichael]
+
+foolCTest :: Int -> IO Integer
+foolCTest 100 = foolTest 0
+foolCTest n = do
+    let r = foolcarmichael !! n
+    r1 <- fst' r
+    r2 <- snd' r
+    r3 <- thrd r
+    if r1 || r2 || r3 then return (carmichael !! n) else ((foolCTest (n + 1)))
+
+-- Need some explaination on the high fail rate in carmichael numbers on the fermat test.
+
+
 {-
     Exercise 6:
     Use the list from the previous exercise to test the Miller-Rabin primality check. What do you find?
 -}
+
+foolMRcarmichael = [(primeMR 1 r, primeMR 2 r, primeMR 3 r) | r <- carmichael]
+
+foolMRTest :: Int -> IO Integer
+foolMRTest 100 = foolTest 0
+foolMRTest n = do
+    let r = foolMRcarmichael !! n
+    r1 <- fst' r
+    r2 <- snd' r
+    r3 <- thrd r
+    if r1 || r2 || r3 then return (carmichael !! n) else ((foolMRTest (n + 1)))
+
+-- The primeMR test also fails but much less stable. Explain why:
 
 {-
     Exercise 6.2:
@@ -123,6 +160,18 @@ fst' (x, y, z) = x
     The recipe: take a prime p, and use the Miller-Rabin algorithm to check whether 2^p−1 is also prime.
     Find information about Mersenne primes on internet and check whether the numbers that you found are genuine Mersenne primes. Report on your findings.
 -}
+
+-- Takes a starting integer (as a power of 2) of at least 2 and an empty list to fill
+-- and appends every primeMR to the list.
+mersenneMRPrime :: Integer -> [Integer] -> IO [Integer]
+mersenneMRPrime 0 _ = do mersenneMRPrime 2 []
+mersenneMRPrime 1 _ = do mersenneMRPrime 2 []
+mersenneMRPrime n l = do
+    let powerof2 = 2 ^ n
+    x <- primeMR 1 (powerof2 - 1)
+    if x then (mersenneMRPrime (n + 1) (l ++ [(powerof2 - 1)])) else (mersenneMRPrime (n + 1) l)
+
+-- Generates a list of possible mersenne primes. Use (take x) <$> mersenneMRPrime 0 []
 
 {-
     Exercise 7 (Bonus):
