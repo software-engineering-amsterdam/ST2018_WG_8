@@ -134,6 +134,7 @@ testCarmichael' = do
     Use the list from the previous exercise to test the Miller-Rabin primality check. What do you find?
 -}
 
+-- TO DO
 
 
 {- 
@@ -143,6 +144,11 @@ testCarmichael' = do
     Find information about Mersenne primes on internet and check whether the numbers that you found are genuine Mersenne primes. Report on your findings.
 -}
 
+findMersenne :: Integer -> Bool
+findMersenne n = (prime n) && (prime (2 ^ (n - 1)))
+
+testGivenMersenne :: Bool
+testGivenMersenne = all (> 0) [ mers x | x <- [1..25]]
 {- 
     Exercise 7 (Bonus):
     For RSA public key cryptography, one needs pairs of large primes with the same bitlength.
