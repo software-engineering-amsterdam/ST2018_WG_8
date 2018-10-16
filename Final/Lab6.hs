@@ -1,4 +1,5 @@
 module Lab6
+    where
 import Data.List
 import System.Random
 import Lecture6
@@ -77,7 +78,7 @@ composites = [ x | x <- [2..], not (prime x)]
 -- it will take more time to find the right number.
 -- With 0 it will always return a false positive.
 
-foolcomposites = [primeTestsF 3 k | r <- composites]
+foolcomposites = [primeTestsF 1 r | r <- composites]
 
 foolTest :: Int -> IO Integer
 foolTest 100 = foolTest 0
