@@ -40,9 +40,7 @@ toPower (x:xs) = x : toPower (map (2 *) xs)
     Check that your implementation is more efficient than expM by running a number of relevant tests and documenting the results.
 -}
 
--- TO DO: TEST STUFF
-
-
+-- Zie Rens.
 
 {- 
     Exercise 3: 
@@ -76,11 +74,28 @@ primeTestsF' k n = do
     as <- sequence $ fmap (\_-> randomRIO (2,n - 1)) [1..k] 
     return (all (\ a -> exM' a (n - 1) n == 1) as)
 
--- testFermat :: Integer
--- testFermat 
--- if primeTestF 
+-- Checks the numbers that pass Fermat against prime check. K is the amount of repetitions.
+notPrime :: Int -> [Integer] -> IO Integer
+notPrime k (x:xs) = do
+    isPrime <- primeTestsF' k x
+    n <- if isPrime 
+        then return x 
+        else notPrime k xs
+    return $ n
 
+-- If a number passes above function, add it to the list.
+testFermat :: Int -> IO [Integer]
+testFermat k  = do
+    noPrime <- notPrime k composites
+    n <- if (k  > 1) 
+        then testFermat (k  - 1)
+        else return []
+    return (noPrime : n)
 
+-- Finds 10 numbers that pass Fermat.
+testFermat' = do
+    check <- testFermat 10
+    print $ reverse $ check
 
 {- 
     Exercise 5: 
@@ -100,10 +115,26 @@ carmichael = [ (6 * k + 1) * (12 * k + 1) * (18 * k + 1) |
     prime (12 * k + 1), 
     prime (18 * k + 1) ]
 
+-- Same function as testFermat, only with carMichael function instead.
+testCarmichael :: Int -> IO [Integer]
+testCarmichael k = do
+    noPrime <- notPrime k carmichael
+    n <- if (k  > 1)
+        then testCarmichael (k  - 1)
+        else return []
+    return (noPrime : n)
+
+-- 294409
+testCarmichael' = do
+    check <- testCarmichael 1
+    print $ reverse $ check
+
 {- 
     Exercise 6:
     Use the list from the previous exercise to test the Miller-Rabin primality check. What do you find?
 -}
+
+
 
 {- 
     Exercise 6.2:
