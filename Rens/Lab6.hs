@@ -78,26 +78,13 @@ composites = [x | x <- [1..], x > 1, not (prime x)]
 -- it will take more time to find the right number.
 -- With 0 it will always return a false positive.
 
-foolcomposites = [(primeTestsF 1 r, primeTestsF 2 r, primeTestsF 3 r) | r <- composites]
+foolcomposites = [primeTestsF 3 k | r <- composites]
 
 foolTest :: Int -> IO Integer
 foolTest 100 = foolTest 0
 foolTest n = do
-    let r = foolcomposites !! n
-    r1 <- fst' r
-    r2 <- snd' r
-    r3 <- thrd r
-    if r1 || r2 || r3 then return (composites !! n) else ((foolTest (n + 1)))
-
-thrd :: (IO Bool, IO Bool, IO Bool) -> IO Bool
-thrd (x, y, z) = z
-
-snd' :: (IO Bool, IO Bool, IO Bool) -> IO Bool
-snd' (x, y, z) = y
-
-fst' :: (IO Bool, IO Bool, IO Bool) -> IO Bool
-fst' (x, y, z) = x
-
+    r <- foolcomposites !! n
+    if r then return (composites !! n) else ((foolTest (n + 1)))
 
 {-
     Exercise 5:
@@ -122,16 +109,13 @@ carmichael = [ (6*k+1)*(12*k+1)*(18*k+1) |
 
 -- Carmichael's numbers are composites, by feeding these numbers to the primeTestsF
 -- function and checking when it returns true we can see what numbers fool the test.
-foolcarmichael = [(primeTestsF 1 r, primeTestsF 2 r, primeTestsF 3 r) | r <- carmichael]
+foolcarmichael = [primeTestsF 3 r | r <- carmichael]
 
 foolCTest :: Int -> IO Integer
 foolCTest 100 = foolTest 0
 foolCTest n = do
-    let r = foolcarmichael !! n
-    r1 <- fst' r
-    r2 <- snd' r
-    r3 <- thrd r
-    if r1 || r2 || r3 then return (carmichael !! n) else ((foolCTest (n + 1)))
+    r <- foolcarmichael !! n
+    if r then return (carmichael !! n) else ((foolCTest (n + 1)))
 
 -- Need some explaination on the high fail rate in carmichael numbers on the fermat test.
 
