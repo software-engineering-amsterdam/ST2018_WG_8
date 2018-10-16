@@ -115,7 +115,7 @@ coprimes = filter (uncurry coprime) pairs
 expM ::  Integer -> Integer -> Integer -> Integer
 expM x y = rem (x^y)
 
--- I got this method from https://gist.github.com/trevordixon/6788535
+-- Rens found this method from https://gist.github.com/trevordixon/6788535
 -- It simply uses a shift operation to find the bit value of the next power of 2
 -- and then multiplies either with 1 for no result or with b mod m
 -- so only the right powers of 2 get used.
