@@ -82,6 +82,7 @@ fctGcd a b =
        (s,t) = fctGcd b r
      in (t, s - q*t)
 
+-- One number in between that is prime, or gcd of 1.
 coprime :: Integer -> Integer -> Bool
 coprime n m = fGcd n m == 1
 
