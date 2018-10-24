@@ -80,6 +80,14 @@ fctGcd a b =
        (s,t) = fctGcd b r
      in (t, s - q*t)
 
+-- Carmichael numbers
+carmichael :: [Integer]
+carmichael = [ (6*k+1)*(12*k+1)*(18*k+1) |
+    k <- [2..],
+    prime (6*k+1),
+    prime (12*k+1),
+    prime (18*k+1) ]
+
 -- Mersenne primes
 mers :: Integer -> Integer
 mers 1  = 2^2-1;    mers 2  = 2^3-1;     mers 3  = 2^5-1
@@ -188,3 +196,42 @@ symClos xs = sort(xs ++ [(swap x) | x <- xs, not ((swap x) `elem` xs)])
 -- If (x,y) ∈ A ^ (y,z) ∈ A -> (x,z) ∈ A
 trClos :: Ord a => Rel a -> Rel a
 trClos = fp (\xs -> sort (nub (xs ++ xs @@ xs)))
+
+-- ∀ x, y ∈ A, xRy ∨ yRx ∨ x=y
+isLinear :: Eq a => [a] -> Rel a -> Bool
+isLinear dom rels = all (== True) [elem (a, b) rels || elem (b, a) rels || a == b | a <- dom, b <- dom]
+
+jos n k 0 = rem (k-1) n
+jos n k i = rem (k + jos (n-1) k (i-1)) n
+
+meeny :: Int->Int->[String]->String
+meeny 0 _ _ = "Empty k"
+meeny _ 0 _ = "Invalid round"
+meeny k i s = s !! abs(jos (length(s)) k (i - 1))
+
+probWin1 n i p = let q = 1 - p in
+    p^(n-i) * sum [ p^j * q^(i-j-1) | j <- [0..i-1] ] / sum [ p^j * q^(n-j-1) | j <- [0..n-1] ]
+
+probWin2 n i p = let r = (1-p)/p in
+    sum [ r^j | j <- [0..i-1] ] / sum [ r^j | j <- [0..n-1]]
+
+probWin3 n i p = let q = 1 - p in
+    (1 - (q/p)^i)/(1-(q/p)^n)
+
+data Tree a = T a [Tree a] deriving (Eq,Ord,Show)
+
+-- Tree consists of (1,1) which are coprimes
+-- Any subsequent node consists of any a, b that are the pair of a coprime part
+-- a and a + b or b and b + a. as the gcd is found by removing a from b or vice versa.
+-- via the euclidian algorithm (and then reversing etc) the adding of a to b only
+-- adds an extra step to this algorithm, having to remove an extra a. The result
+-- is still the same! The gcd is 1, the numbers are coprime.
+
+grow :: (node -> [node]) -> node -> Tree node
+grow step seed = T seed (map (grow step) (step seed))
+
+tree1 n = grow (step1 n) (1,1)
+step1 n = \ (x,y) -> if x+y <= n then [(x+y,x),(x,x+y)] else [] -- step function
+
+tree2 n = grow (step2 n) (1,1)
+step2 n = \ (x,y) -> if x+y <= n then [(x+y,y),(x,x+y)] else [] -- step function

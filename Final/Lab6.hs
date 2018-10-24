@@ -4,7 +4,7 @@ import Data.Bits
 import Data.List
 import Lecture6
 import System.Random
--- import System.TimeIt -- https://hackage.haskell.org/package/timeit-2.0/docs/System-TimeIt.html
+import System.TimeIt -- https://hackage.haskell.org/package/timeit-2.0/docs/System-TimeIt.html
 
 {-
     Exercise 1:
@@ -17,7 +17,7 @@ import System.Random
     exM a 0 m = 1
     exM a b m = t * exM ((a * a) `mod` m) (shiftR b 1) m `mod` m
         where t = if testBit b 0 then a `mod` m else 1
--} 
+-}
 
 {-
     Exercise 2: Check that your implementation is more efficient than expM
@@ -78,9 +78,9 @@ foolComposites = [ primeTestsF 3 r | r <- composites] -- Can be replaced for k =
 testFermat :: Int -> IO Integer
 testFermat 100 = testFermat 0
 testFermat n = do
-    r <- foolComposites !! n 
-    if r 
-        then return (composites !! n) 
+    r <- foolComposites !! n
+    if r
+        then return (composites !! n)
         else ((testFermat (n + 1)))
 
 {-
@@ -95,9 +95,9 @@ testFermat n = do
 
 carmichael :: [Integer]
 carmichael = [ (6 * k + 1) * (12 * k + 1) * (18 * k + 1) |
-    k <- [2..], 
-    prime (6 * k + 1), 
-    prime (12 * k + 1), 
+    k <- [2..],
+    prime (6 * k + 1),
+    prime (12 * k + 1),
     prime (18 * k + 1) ]
 
 -- Carmichael's numbers are composites, by feeding these numbers to the primeTestsF
@@ -108,8 +108,8 @@ testCM :: Int -> IO Integer
 testCM 100 = testFermat 0
 testCM n = do
     r <- foolCM !! n
-    if r 
-        then return (carmichael !! n) 
+    if r
+        then return (carmichael !! n)
         else ((testCM (n + 1)))
 
 {-
@@ -123,8 +123,8 @@ testMR :: Int -> IO Integer
 testMR 100 = testFermat 0
 testMR n = do
     r <- foolMR !! n
-    if r 
-        then return (carmichael !! n) 
+    if r
+        then return (carmichael !! n)
         else ((testMR (n + 1)))
 
 -- The primeMR test also fails but much less stable. Explain why: TO DO
@@ -143,8 +143,8 @@ mersenneMRPrime 1 _ = do mersenneMRPrime 2 []
 mersenneMRPrime n l = do
     let powerof2 = 2 ^ n
     x <- primeMR 1 (powerof2 - 1)
-    if x 
-        then (mersenneMRPrime (n + 1) (l ++ [(powerof2 - 1)])) 
+    if x
+        then (mersenneMRPrime (n + 1) (l ++ [(powerof2 - 1)]))
         else (mersenneMRPrime (n + 1) l)
 
 -- Generates a list of possible mersenne primes.
